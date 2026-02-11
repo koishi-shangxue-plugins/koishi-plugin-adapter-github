@@ -3,7 +3,13 @@ import { GitHubBotWithAPI } from './api'
 
 // 扩展 GitHubBot 类，添加反应相关方法
 export class GitHubBotWithReaction extends GitHubBotWithAPI {
-  // 创建反应（GitHub Reaction）
+  /**
+   * 创建反应（GitHub Reaction）
+   * @param channelId 频道 ID，格式：owner/repo:type:number（如：owner/repo:issues:1）
+   * @param messageId 消息 ID，可以是评论 ID 或特殊标识（'issue'、'pull'、'discussion'）
+   * @param emoji 表情符号（支持：👍 👎 😄 🎉 😕 ❤️ 🚀 👀）
+   * @throws {Error} 当频道 ID 无效或评论 ID 无效时抛出错误
+   */
   async createReaction(channelId: string, messageId: string, emoji: string): Promise<void> {
     const parsed = this.parseChannelId(channelId)
     if (!parsed) throw new Error('Invalid channel ID')
@@ -32,16 +38,19 @@ export class GitHubBotWithReaction extends GitHubBotWithAPI {
             owner,
             repo,
             issue_number: number,
-            content: content as any,
+            content: content as '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes',
           })
         } else {
           // 对评论添加反应
           const commentId = parseInt(messageId)
+          if (isNaN(commentId)) {
+            throw new Error(`无效的评论 ID: ${messageId}`)
+          }
           await this.octokit.reactions.createForIssueComment({
             owner,
             repo,
             comment_id: commentId,
-            content: content as any,
+            content: content as '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes',
           })
         }
       }

@@ -287,7 +287,23 @@ export class GitHubBotWithEventHandling extends GitHubBot {
       session.content = h.normalize(elements).join('')
       // 保存原始元素供后续使用
       session.elements = h.normalize(elements)
-      session.messageId = event.id
+
+      // 根据事件类型设置正确的 messageId
+      let messageId = event.id
+      if (event.type === 'IssueCommentEvent' && event.payload.comment) {
+        messageId = String(event.payload.comment.id)
+      } else if (event.type === 'PullRequestReviewCommentEvent' && event.payload.comment) {
+        messageId = String(event.payload.comment.id)
+      } else if (event.type === 'DiscussionCommentEvent' && event.payload.comment) {
+        messageId = String(event.payload.comment.id)
+      } else if (event.type === 'IssuesEvent') {
+        messageId = 'issue'
+      } else if (event.type === 'PullRequestEvent') {
+        messageId = 'pull'
+      } else if (event.type === 'DiscussionEvent') {
+        messageId = 'discussion'
+      }
+      session.messageId = messageId
 
       // 设置 guild 和 channel 信息
       if (event.type === 'IssueCommentEvent' || event.type === 'IssuesEvent') {
