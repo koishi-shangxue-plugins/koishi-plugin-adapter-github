@@ -278,3 +278,209 @@ async bot.internal.deleteIssueCommentReaction(owner: string, repo: string, comme
 await bot.internal.deleteIssueReaction('owner', 'repo', 123, reactionId)
 await bot.internal.deleteIssueCommentReaction('owner', 'repo', 789, reactionId)
 ```
+
+---
+
+## Workflow 管理
+
+### listWorkflows
+
+获取仓库的工作流列表。
+
+```typescript
+async bot.internal.listWorkflows(
+  owner: string,
+  repo: string
+): Promise<any[]>
+```
+
+| 参数  | 类型   | 必填 | 说明       |
+| ----- | ------ | ---- | ---------- |
+| owner | string | 是   | 仓库所有者 |
+| repo  | string | 是   | 仓库名称   |
+
+**返回值**：工作流列表数组
+
+```typescript
+const workflows = await bot.internal.listWorkflows('owner', 'repo')
+workflows.forEach(workflow => {
+  console.log(`${workflow.name} (${workflow.path})`)
+})
+```
+
+---
+
+### getWorkflow
+
+获取工作流详情。
+
+```typescript
+async bot.internal.getWorkflow(
+  owner: string,
+  repo: string,
+  workflowId: number | string
+): Promise<any>
+```
+
+| 参数       | 类型             | 必填 | 说明                              |
+| ---------- | ---------------- | ---- | --------------------------------- |
+| owner      | string           | 是   | 仓库所有者                        |
+| repo       | string           | 是   | 仓库名称                          |
+| workflowId | number \| string | 是   | 工作流 ID 或文件名（如 `ci.yml`） |
+
+```typescript
+const workflow = await bot.internal.getWorkflow('owner', 'repo', 'ci.yml')
+console.log(`工作流名称: ${workflow.name}`)
+console.log(`状态: ${workflow.state}`)
+```
+
+---
+
+### triggerWorkflow
+
+触发工作流运行。
+
+```typescript
+async bot.internal.triggerWorkflow(
+  owner: string,
+  repo: string,
+  workflowId: number | string,
+  ref: string,
+  inputs?: Record<string, string>
+): Promise<void>
+```
+
+| 参数       | 类型                   | 必填 | 说明                        |
+| ---------- | ---------------------- | ---- | --------------------------- |
+| owner      | string                 | 是   | 仓库所有者                  |
+| repo       | string                 | 是   | 仓库名称                    |
+| workflowId | number \| string       | 是   | 工作流 ID 或文件名          |
+| ref        | string                 | 是   | 分支或标签名称（如 `main`） |
+| inputs     | Record<string, string> | 否   | 工作流输入参数              |
+
+:::tip 提示
+工作流必须配置 `workflow_dispatch` 触发器才能手动触发。
+:::
+
+```typescript
+// 触发工作流（无输入参数）
+await bot.internal.triggerWorkflow('owner', 'repo', 'deploy.yml', 'main')
+
+// 触发工作流（带输入参数）
+await bot.internal.triggerWorkflow(
+  'owner', 'repo', 'deploy.yml', 'main',
+  { environment: 'production', version: 'v1.0.0' }
+)
+```
+
+---
+
+### listWorkflowRuns
+
+获取工作流运行列表。
+
+```typescript
+async bot.internal.listWorkflowRuns(
+  owner: string,
+  repo: string,
+  workflowId?: number | string,
+  status?: 'completed' | 'action_required' | 'cancelled' | 'failure' |
+           'neutral' | 'skipped' | 'stale' | 'success' | 'timed_out' |
+           'in_progress' | 'queued' | 'requested' | 'waiting'
+): Promise<any[]>
+```
+
+| 参数       | 类型             | 必填 | 说明                        |
+| ---------- | ---------------- | ---- | --------------------------- |
+| owner      | string           | 是   | 仓库所有者                  |
+| repo       | string           | 是   | 仓库名称                    |
+| workflowId | number \| string | 否   | 工作流 ID（筛选特定工作流） |
+| status     | string           | 否   | 运行状态（筛选特定状态）    |
+
+**返回值**：工作流运行列表数组（最多 30 条）
+
+```typescript
+// 获取所有工作流运行
+const runs = await bot.internal.listWorkflowRuns('owner', 'repo')
+
+// 获取特定工作流的运行记录
+const ciRuns = await bot.internal.listWorkflowRuns('owner', 'repo', 'ci.yml')
+
+// 获取失败的运行记录
+const failedRuns = await bot.internal.listWorkflowRuns('owner', 'repo', undefined, 'failure')
+```
+
+---
+
+### getWorkflowRun
+
+获取工作流运行详情。
+
+```typescript
+async bot.internal.getWorkflowRun(
+  owner: string,
+  repo: string,
+  runId: number
+): Promise<any>
+```
+
+| 参数  | 类型   | 必填 | 说明       |
+| ----- | ------ | ---- | ---------- |
+| owner | string | 是   | 仓库所有者 |
+| repo  | string | 是   | 仓库名称   |
+| runId | number | 是   | 运行 ID    |
+
+```typescript
+const run = await bot.internal.getWorkflowRun('owner', 'repo', 123456789)
+console.log(`状态: ${run.status}`)
+console.log(`结论: ${run.conclusion}`)
+console.log(`运行时间: ${run.run_started_at}`)
+```
+
+---
+
+### cancelWorkflowRun
+
+取消工作流运行。
+
+```typescript
+async bot.internal.cancelWorkflowRun(
+  owner: string,
+  repo: string,
+  runId: number
+): Promise<void>
+```
+
+| 参数  | 类型   | 必填 | 说明       |
+| ----- | ------ | ---- | ---------- |
+| owner | string | 是   | 仓库所有者 |
+| repo  | string | 是   | 仓库名称   |
+| runId | number | 是   | 运行 ID    |
+
+```typescript
+await bot.internal.cancelWorkflowRun('owner', 'repo', 123456789)
+```
+
+---
+
+### rerunWorkflow
+
+重新运行工作流。
+
+```typescript
+async bot.internal.rerunWorkflow(
+  owner: string,
+  repo: string,
+  runId: number
+): Promise<void>
+```
+
+| 参数  | 类型   | 必填 | 说明       |
+| ----- | ------ | ---- | ---------- |
+| owner | string | 是   | 仓库所有者 |
+| repo  | string | 是   | 仓库名称   |
+| runId | number | 是   | 运行 ID    |
+
+```typescript
+await bot.internal.rerunWorkflow('owner', 'repo', 123456789)
+```
