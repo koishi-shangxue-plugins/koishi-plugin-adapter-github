@@ -109,22 +109,14 @@ export class GitHubBotWithEventHandling extends GitHubBot
         per_page: 50,
       });
 
-      // 按仓库分组处理通知
+      // 处理所有通知
       for (const notification of notifications)
       {
         const owner = notification.repository.owner.login;
         const repo = notification.repository.name;
         const repoKey = `${owner}/${repo}`;
 
-        // 检查是否在监听列表中
-        const isMonitored = this.config.repositories.some(
-          r => r.owner === owner && r.repo === repo
-        );
-        if (!isMonitored)
-        {
-          this.logInfo(`跳过非监听仓库的通知: ${repoKey}`);
-          continue;
-        }
+        this.logInfo(`处理仓库通知: ${repoKey}`);
 
         // 处理通知
         await this.handleNotification(notification, owner, repo);
