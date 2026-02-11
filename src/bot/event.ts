@@ -19,7 +19,7 @@ export class GitHubBotWithEventHandling extends GitHubBot
         avatar: user.avatar_url,
       };
 
-      // 验证并初始化每个仓库的最新事件 ID
+      // 验证并初始化每个仓库
       const validRepos: typeof this.config.repositories = [];
       for (const repo of this.config.repositories)
       {
@@ -32,15 +32,18 @@ export class GitHubBotWithEventHandling extends GitHubBot
             repo: repo.repo,
           });
 
-          // 获取最新事件
-          const { data: events } = await this.octokit.activity.listRepoEvents({
-            owner: repo.owner,
-            repo: repo.repo,
-            per_page: 1,
-          });
-          if (events.length > 0)
+          // 自动设置仓库订阅为"所有活动"
+          try
           {
-            this._lastEventIds.set(repoKey, events[0].id);
+            await this.octokit.activity.setRepoSubscription({
+              owner: repo.owner,
+              repo: repo.repo,
+              subscribed: true,
+              ignored: false,
+            });
+          } catch (e: any)
+          {
+            this.loggerWarn(`设置仓库 ${repoKey} 订阅失败:`, e.message);
           }
 
           validRepos.push(repo);
