@@ -702,9 +702,9 @@ export class GitHubBotWithEventHandling extends GitHubBot
       eventType = 'ForkEvent';
       payload = { forkee: event.forkee };
       actor = event.forkee.owner;
-    } else if (event.action === 'started' && event.repository)
+    } else if ((event.action === 'started' || event.action === 'deleted') && event.repository && !event.issue && !event.pull_request && !event.discussion)
     {
-      // Star 事件（webhook 中 star 事件的 action 是 'started'）
+      // Star 事件（webhook 中 star 事件的 action 是 'started' 或 'deleted'）
       eventType = 'WatchEvent';
       payload = { action: event.action };
     } else if (event.workflow_run)

@@ -25,13 +25,22 @@ export function registerWebhookRouter(ctx: Context, bot: GitHubBot, config: Conf
     // POST 路由处理 webhook 事件
     server.post(webhookPath, async (koaCtx: any) =>
     {
-      bot.loggerInfo(`收到 Webhook 请求: ${koaCtx.headers['x-github-event']}`);
+      const event = koaCtx.headers['x-github-event'] as string;
+      bot.loggerInfo(`收到 Webhook 请求: ${event}`);
+
+      // 处理 ping 事件（GitHub webhook 测试）
+      if (event === 'ping')
+      {
+        bot.loggerInfo('Webhook ping 测试成功');
+        koaCtx.status = 200;
+        koaCtx.body = { message: 'pong' };
+        return;
+      }
 
       const signature = koaCtx.headers['x-hub-signature-256'] as string;
-      const event = koaCtx.headers['x-github-event'] as string;
       const payload = koaCtx.request.body;
 
-      bot.loggerInfo(`Webhook payload: ${JSON.stringify(payload).substring(0, 200)}...`);
+      bot.logInfo(`Webhook payload: ${JSON.stringify(payload).substring(0, 200)}...`);
 
       // 验证签名
       const rawBody = JSON.stringify(payload);
