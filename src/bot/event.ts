@@ -159,6 +159,10 @@ export class GitHubBotWithEventHandling extends GitHubBot
         return;
       }
 
+      // 获取上次读取时间，用于过滤新评论
+      const lastReadAt = notification.last_read_at ? new Date(notification.last_read_at) : null;
+      const updatedAt = new Date(notification.updated_at);
+
       // 根据类型获取详细信息并构造事件
       if (subjectType === 'Issue')
       {
@@ -168,32 +172,35 @@ export class GitHubBotWithEventHandling extends GitHubBot
           issue_number: number,
         });
 
-        // 获取最新评论
-        const { data: comments } = await this.octokit.issues.listComments({
+        // 获取自上次读取后的所有评论
+        const { data: allComments } = await this.octokit.issues.listComments({
           owner,
           repo,
           issue_number: number,
-          per_page: 1,
-          sort: 'created',
-          direction: 'desc',
+          per_page: 100,
+          since: lastReadAt ? lastReadAt.toISOString() : undefined,
         });
 
-        if (comments.length > 0)
+        // 处理每条新评论
+        for (const comment of allComments)
         {
-          // 构造评论事件
+          const commentTime = new Date(comment.created_at);
+          // 只处理在通知更新时间之前的评论
+          if (lastReadAt && commentTime <= lastReadAt) continue;
+
           const event = {
-            id: `notif-${notification.id}`,
+            id: `notif-${notification.id}-${comment.id}`,
             type: 'IssueCommentEvent',
             actor: {
-              login: comments[0].user.login,
-              avatar_url: comments[0].user.avatar_url,
+              login: comment.user.login,
+              avatar_url: comment.user.avatar_url,
             },
             payload: {
               action: 'created',
               issue: issue,
-              comment: comments[0],
+              comment: comment,
             },
-            created_at: comments[0].created_at,
+            created_at: comment.created_at,
           };
           await this.handleEvent(event, owner, repo);
         }
@@ -205,32 +212,35 @@ export class GitHubBotWithEventHandling extends GitHubBot
           pull_number: number,
         });
 
-        // 获取最新评论
-        const { data: comments } = await this.octokit.issues.listComments({
+        // 获取自上次读取后的所有评论
+        const { data: allComments } = await this.octokit.issues.listComments({
           owner,
           repo,
           issue_number: number,
-          per_page: 1,
-          sort: 'created',
-          direction: 'desc',
+          per_page: 100,
+          since: lastReadAt ? lastReadAt.toISOString() : undefined,
         });
 
-        if (comments.length > 0)
+        // 处理每条新评论
+        for (const comment of allComments)
         {
-          // 构造评论事件
+          const commentTime = new Date(comment.created_at);
+          // 只处理在通知更新时间之前的评论
+          if (lastReadAt && commentTime <= lastReadAt) continue;
+
           const event = {
-            id: `notif-${notification.id}`,
+            id: `notif-${notification.id}-${comment.id}`,
             type: 'IssueCommentEvent',
             actor: {
-              login: comments[0].user.login,
-              avatar_url: comments[0].user.avatar_url,
+              login: comment.user.login,
+              avatar_url: comment.user.avatar_url,
             },
             payload: {
               action: 'created',
               issue: pull,
-              comment: comments[0],
+              comment: comment,
             },
-            created_at: comments[0].created_at,
+            created_at: comment.created_at,
           };
           await this.handleEvent(event, owner, repo);
         }
