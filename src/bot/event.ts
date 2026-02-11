@@ -540,17 +540,24 @@ export class GitHubBotWithEventHandling extends GitHubBot
 
     this.logInfo(`事件详情: ${JSON.stringify(event, null, 2)}`);
 
-    // 处理特殊事件（只记录日志，不创建会话）
+    // 处理特殊事件（只派发事件，不创建会话）
     if (event.type === 'WorkflowRunEvent' || event.type === 'WorkflowJobEvent')
     {
       this.handleWorkflowEvent(event, owner, repo);
       return;
     }
 
-    // 处理 star 和 fork 事件（只记录日志，不创建会话）
+    // 处理 star 和 fork 事件（只派发事件，不创建会话）
     if (event.type === 'WatchEvent' || event.type === 'ForkEvent')
     {
       this.handleStarForkEvent(event, owner, repo);
+      return;
+    }
+
+    // 处理 push 和 release 事件（只派发事件，不创建会话）
+    if (event.type === 'PushEvent' || event.type === 'ReleaseEvent')
+    {
+      this.dispatchGitHubEvent(event, owner, repo);
       return;
     }
 
