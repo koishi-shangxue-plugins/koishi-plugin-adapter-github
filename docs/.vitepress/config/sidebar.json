@@ -45,8 +45,12 @@
         "link": "/markdown/dev/message"
       },
       {
-        "text": "API 接口",
+        "text": "通用 API 接口",
         "link": "/markdown/dev/apis"
+      },
+      {
+        "text": "内部 API 接口",
+        "link": "/markdown/dev/internal-api"
       }
     ]
   },

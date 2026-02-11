@@ -2,7 +2,7 @@
 
 GitHub 适配器实现了 Koishi 的标准 Bot API，并提供了一些 GitHub 特有的功能。
 
-## 消息 API
+## 标准消息 API
 
 ### sendMessage
 
