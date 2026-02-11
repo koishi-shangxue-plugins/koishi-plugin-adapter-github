@@ -18,7 +18,7 @@ export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
     if (isNaN(number) || !owner || !repo) return [];
 
     // 使用消息编码器将 Fragment 转换为纯文本
-    const body = await encodeMessage(this, content);
+    const body = await encodeMessage(this, content, channelId);
 
     try
     {
@@ -154,7 +154,7 @@ export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
     if (!parsed) throw new Error('Invalid channel ID');
 
     const { owner, repo, type } = parsed;
-    const body = await encodeMessage(this, content);
+    const body = await encodeMessage(this, content, channelId);
 
     try
     {

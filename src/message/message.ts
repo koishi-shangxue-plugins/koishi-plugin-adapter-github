@@ -37,7 +37,7 @@ async function transformUrl(bot: GitHubBot, elementString: string): Promise<stri
 /**
  * 将 Koishi 的 Fragment 转换为纯文本，用于发送到 GitHub
  */
-export async function encodeMessage(bot: GitHubBot, content: h.Fragment): Promise<string>
+export async function encodeMessage(bot: GitHubBot, content: h.Fragment, channelId?: string): Promise<string>
 {
   let result = '';
 
@@ -78,7 +78,7 @@ export async function encodeMessage(bot: GitHubBot, content: h.Fragment): Promis
               } else if (Array.isArray(rendered))
               {
                 // 递归处理 Fragment 数组
-                const nested = await encodeMessage(bot, rendered);
+                const nested = await encodeMessage(bot, rendered, channelId);
                 result += nested;
                 break;
               }
@@ -196,29 +196,29 @@ export async function encodeMessage(bot: GitHubBot, content: h.Fragment): Promis
 
       case 'b':
       case 'strong':
-        result += `**${await encodeMessage(bot, children)}**`;
+        result += `**${await encodeMessage(bot, children, channelId)}**`;
         break;
 
       case 'i':
       case 'em':
-        result += `*${await encodeMessage(bot, children)}*`;
+        result += `*${await encodeMessage(bot, children, channelId)}*`;
         break;
 
       case 'u':
-        result += `__${await encodeMessage(bot, children)}__`;
+        result += `__${await encodeMessage(bot, children, channelId)}__`;
         break;
 
       case 's':
       case 'del':
-        result += `~~${await encodeMessage(bot, children)}~~`;
+        result += `~~${await encodeMessage(bot, children, channelId)}~~`;
         break;
 
       case 'code':
-        result += `\`${await encodeMessage(bot, children)}\``;
+        result += `\`${await encodeMessage(bot, children, channelId)}\``;
         break;
 
       case 'p':
-        result += await encodeMessage(bot, children);
+        result += await encodeMessage(bot, children, channelId);
         result += '\n\n';
         break;
 
@@ -226,17 +226,49 @@ export async function encodeMessage(bot: GitHubBot, content: h.Fragment): Promis
         result += '\n';
         break;
 
-      case 'quote':
-        const quoteText = await encodeMessage(bot, children);
-        result += quoteText.split('\n').map(line => `> ${line}`).join('\n');
-        result += '\n\n';
+      case 'quote': {
+        // 如果有 id 属性，说明是引用某条消息
+        if (attrs.id && channelId)
+        {
+          try
+          {
+            const messageId = attrs.id;
+
+            // 获取被引用消息的内容
+            const message = await bot.getMessage(channelId, messageId);
+
+            if (message && message.content)
+            {
+              // 将引用的内容转换为 markdown 引用格式
+              result += message.content.split('\n').map(line => `> ${line}`).join('\n');
+              result += '\n\n';
+            }
+          } catch (e)
+          {
+            bot.logError(`获取引用消息失败: ${attrs.id}`, e);
+            // 如果获取失败，降级处理子元素
+            const quoteText = await encodeMessage(bot, children, channelId);
+            if (quoteText)
+            {
+              result += quoteText.split('\n').map(line => `> ${line}`).join('\n');
+              result += '\n\n';
+            }
+          }
+        } else
+        {
+          // 没有 id 属性，直接处理子元素
+          const quoteText = await encodeMessage(bot, children, channelId);
+          result += quoteText.split('\n').map(line => `> ${line}`).join('\n');
+          result += '\n\n';
+        }
         break;
+      }
 
       default:
         // 对于未知类型，递归处理子元素
         if (children && children.length > 0)
         {
-          result += await encodeMessage(bot, children);
+          result += await encodeMessage(bot, children, channelId);
         }
         break;
     }
