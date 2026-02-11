@@ -419,45 +419,23 @@ export class GitHubInternal {
   }
 
   /**
-   * 删除 Issue/PR 的反应（通过反应 ID）
+   * 删除反应
+   * 注意：只能删除当前认证用户自己创建的反应
    * @param owner 仓库所有者
    * @param repo 仓库名称
-   * @param issueNumber Issue/PR 编号
    * @param reactionId 反应 ID
    */
-  async deleteIssueReaction(owner: string, repo: string, issueNumber: number, reactionId: number) {
+  async deleteReaction(owner: string, repo: string, reactionId: number) {
     try {
-      await this.bot.octokit.reactions.deleteForIssue({
+      // GitHub API 删除反应的端点
+      await this.bot.octokit.request('DELETE /repos/{owner}/{repo}/reactions/{reaction_id}', {
         owner,
         repo,
-        issue_number: issueNumber,
         reaction_id: reactionId,
       })
-      this.bot.logInfo(`删除 Issue 反应成功: ${reactionId}`)
+      this.bot.logInfo(`删除反应成功: ${reactionId}`)
     } catch (e) {
-      this.bot.logError(`删除 Issue 反应失败: ${reactionId}`, e)
-      throw e
-    }
-  }
-
-  /**
-   * 删除 Issue 评论的反应（通过反应 ID）
-   * @param owner 仓库所有者
-   * @param repo 仓库名称
-   * @param commentId 评论 ID
-   * @param reactionId 反应 ID
-   */
-  async deleteIssueCommentReaction(owner: string, repo: string, commentId: number, reactionId: number) {
-    try {
-      await this.bot.octokit.reactions.deleteForIssueComment({
-        owner,
-        repo,
-        comment_id: commentId,
-        reaction_id: reactionId,
-      })
-      this.bot.logInfo(`删除评论反应成功: ${reactionId}`)
-    } catch (e) {
-      this.bot.logError(`删除评论反应失败: ${reactionId}`, e)
+      this.bot.logError(`删除反应失败: ${reactionId}`, e)
       throw e
     }
   }
