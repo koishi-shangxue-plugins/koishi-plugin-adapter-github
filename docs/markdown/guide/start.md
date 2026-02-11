@@ -2,7 +2,9 @@
 
 本指南将帮助你快速配置并使用 GitHub 适配器。
 
-## 1. 生成 Personal Access Token (PAT)
+## 1. 生成 PAT
+
+> Personal Access Token
 
 为了让 Koishi 机器人能够代表你的 GitHub 账号进行操作（例如读取事件、发表评论），你需要创建一个 Personal Access Token。
 

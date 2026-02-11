@@ -52,7 +52,7 @@ body:
     id: plugin-version
     attributes:
       label: 插件版本
-      description: koishi-plugin-adapter-yunhupro 版本
+      description: koishi-plugin-adapter-github 版本
       placeholder: "例如: 0.4.17"
     validations:
       required: true
