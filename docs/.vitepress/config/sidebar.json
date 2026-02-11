@@ -54,10 +54,6 @@
     "text": "开发指南",
     "items": [
       {
-        "text": "监听 GitHub 事件",
-        "link": "/markdown/dev/listen-events"
-      },
-      {
         "text": "频道 ID 说明",
         "link": "/markdown/dev/channel-id"
       },

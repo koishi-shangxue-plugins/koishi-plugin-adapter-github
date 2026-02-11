@@ -1,4 +1,4 @@
-# Webhook 模式（推送）
+# Webhook 模式
 
 Webhook 模式通过 GitHub 的 Webhook 功能实时接收事件推送，提供最佳的实时性和完整的事件支持。
 
@@ -37,6 +37,8 @@ Webhook 模式通过 GitHub 的 Webhook 功能实时接收事件推送，提供�
 
 ### 2. 在 GitHub 配置 Webhook
 
+![alt](https://github.com/koishi-shangxue-plugins/koishi-plugin-adapter-github/blob/docs/docs/public/2026-02-11_18-50-53.png?raw=true)
+
 1. 打开你的 GitHub 仓库
 2. 进入 **Settings** → **Webhooks** → **Add webhook**
 3. 填写配置：
@@ -72,40 +74,8 @@ http://你的服务器地址:端口/github/webhook
 - ✅ Discussions
 - ✅ Discussion comments
 
-1. 点击 **Add webhook** 完成配置
+  点击 **Add webhook** 完成配置
 
-### 3. 验证配置
-
-配置完成后，GitHub 会发送一个测试请求。在 Webhook 设置页面可以看到：
-
-- ✅ 绿色勾号：配置成功
-- ❌ 红色叉号：配置失败，点击查看详情
-
-## 配置项说明
-
-### webhookPath
-
-- **类型**: `string`
-- **默认值**: `"/github/webhook"`
-- **说明**: Webhook 路径
-
-可以自定义路径，例如：
-
-- `/github/webhook`
-- `/webhooks/github`
-- `/api/github/events`
-
-### webhookSecret
-
-- **类型**: `string`
-- **可选**: 是（但强烈推荐）
-- **说明**: Webhook 密钥
-
-用于验证请求来源，防止恶意请求。配置后，适配器会验证 GitHub 发送的签名。
-
-:::warning 安全提示
-生产环境务必配置 `webhookSecret`，否则任何人都可以向你的服务器发送伪造的事件。
-:::
 
 ## 优势
 
@@ -129,71 +99,9 @@ http://你的服务器地址:端口/github/webhook
 
 Webhook 模式支持所有 GitHub 事件类型：
 
-✅ **IssuesEvent** - Issue 创建、关闭、重新打开
-✅ **IssueCommentEvent** - Issue 评论
-✅ **PullRequestEvent** - PR 创建、关闭、重新打开、合并
-✅ **PullRequestReviewCommentEvent** - PR 审查评论
-✅ **DiscussionEvent** - Discussion 创建、关闭、重新打开
-✅ **DiscussionCommentEvent** - Discussion 评论
-
-## 本地开发
-
-本地开发时，可以使用内网穿透工具将本地服务暴露到公网：
-
-### 推荐工具
-
-- [ngrok](https://ngrok.com/)
-- [frp](https://github.com/fatedier/frp)
-- [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/)
-
-### 使用 ngrok 示例
-
-```bash
-# 安装 ngrok
-npm install -g ngrok
-
-# 启动内网穿透（假设 Koishi 运行在 5140 端口）
-ngrok http 5140
-```
-
-ngrok 会提供一个公网 URL，例如：
-
-```url
-https://abc123.ngrok.io
-```
-
-然后在 GitHub Webhook 配置中使用：
-
-```url
-https://abc123.ngrok.io/github/webhook
-```
-
-## 故障排查
-
-### Webhook 配置失败
-
-1. 检查服务器地址和端口是否正确
-2. 检查防火墙是否开放端口
-3. 检查 Koishi 是否正常运行
-4. 访问 `http://你的服务器:端口/github/webhook` 测试路由是否可访问
-
-### 收不到事件
-
-1. 在 GitHub Webhook 设置页面查看推送记录
-2. 检查 `webhookSecret` 是否配置正确
-3. 开启 `loggerinfo` 查看详细日志
-4. 检查事件类型是否已勾选
-
-### 签名验证失败
-
-1. 确保插件配置的 `webhookSecret` 与 GitHub 配置的一致
-2. 检查是否有反向代理修改了请求头
-3. 查看日志中的错误信息
-
-## 安全建议
-
-1. ✅ 务必配置 `webhookSecret`
-2. ✅ 使用 HTTPS（生产环境）
-3. ✅ 定期更换密钥
-4. ✅ 监控异常请求
-5. ✅ 限制 IP 访问（可选）
+- ✅ **IssuesEvent** - Issue 创建、关闭、重新打开
+- ✅ **IssueCommentEvent** - Issue 评论
+- ✅ **PullRequestEvent** - PR 创建、关闭、重新打开、合并
+- ✅ **PullRequestReviewCommentEvent** - PR 审查评论
+- ✅ **DiscussionEvent** - Discussion 创建、关闭、重新打开
+- ✅ **DiscussionCommentEvent** - Discussion 评论

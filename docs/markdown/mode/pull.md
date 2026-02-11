@@ -1,4 +1,4 @@
-# Pull 模式（轮询）
+# Pull 模式
 
 Pull 模式通过定时轮询 GitHub API 来获取仓库事件，适合没有公网 IP 或无法配置 Webhook 的场景。
 
@@ -8,37 +8,6 @@ Pull 模式通过定时轮询 GitHub API 来获取仓库事件，适合没有公
 2. 按照配置的轮询间隔，定时调用 GitHub Events API
 3. 比对事件 ID，只处理新产生的事件
 4. 将事件转换为 Koishi 消息并派发
-
-## 配置示例
-
-```json
-{
-  "token": "ghp_xxxxxxxxxxxxxxxxxxxx",
-  "repositories": [
-    {
-      "owner": "koishi-shangxue-plugins",
-      "repo": "koishi-plugin-adapter-github"
-    }
-  ],
-  "mode": "pull",
-  "interval": 30
-}
-```
-
-## 配置项说明
-
-### interval
-
-- **类型**: `number`
-- **默认值**: `20`
-- **单位**: 秒
-- **说明**: 轮询间隔
-
-建议根据实际需求调整：
-
-- **开发测试**: 10-20 秒（快速响应）
-- **生产环境**: 30-60 秒（平衡实时性和 API 配额）
-- **低频仓库**: 60-300 秒（节省 API 配额）
 
 ## 优势
 
@@ -91,10 +60,15 @@ GitHub API 对请求频率有限制：
 Pull 模式通过 [GitHub Events API](https://docs.github.com/en/rest/activity/events) 获取事件，支持以下类型：
 
 ✅ **IssuesEvent** - Issue 创建、关闭、重新打开
+
 ✅ **IssueCommentEvent** - Issue 评论
+
 ✅ **PullRequestEvent** - PR 创建、关闭、重新打开
+
 ✅ **PullRequestReviewCommentEvent** - PR 审查评论
+
 ❌ **DiscussionEvent** - Discussion 事件（API 不支持）
+
 ❌ **DiscussionCommentEvent** - Discussion 评论（API 不支持）
 
 :::warning 注意
@@ -104,23 +78,3 @@ Pull 模式通过 [GitHub Events API](https://docs.github.com/en/rest/activity/e
 ## 代理配置
 
 Pull 模式支持通过代理访问 GitHub API，详见 [代理配置](/markdown/mode/proxy)。
-
-## 故障排查
-
-### 收不到事件
-
-1. 检查 Token 权限是否正确
-2. 检查仓库配置是否正确
-3. 开启 `loggerinfo` 查看详细日志
-4. 检查 API 配额是否耗尽
-
-### 事件延迟严重
-
-1. 减小轮询间隔（注意 API 配额）
-2. 考虑切换到 Webhook 模式
-
-### API 配额耗尽
-
-1. 增大轮询间隔
-2. 减少监听的仓库数量
-3. 等待配额重置（每小时重置一次）

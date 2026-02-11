@@ -32,21 +32,6 @@
 }
 ```
 
-## 配置项说明
-
-### useProxy
-
-- **类型**: `boolean`
-- **默认值**: `false`
-- **说明**: 是否使用代理
-
-### proxyUrl
-
-- **类型**: `string`
-- **默认值**: `"http://localhost:7897"`
-- **说明**: 代理服务器地址
-- **生效条件**: `useProxy` 为 `true`
-
 ## 支持的代理协议
 
 ### HTTP 代理
@@ -62,83 +47,6 @@
 ```json
 {
   "proxyUrl": "https://proxy.example.com:8080"
-}
-```
-
-## 常见代理工具配置
-
-### Clash
-
-Clash 默认代理端口：
-
-- HTTP: `7890`
-- SOCKS5: `7891`
-
-配置示例：
-
-```json
-{
-  "useProxy": true,
-  "proxyUrl": "http://localhost:7890"
-}
-```
-
-### V2Ray
-
-V2Ray 默认代理端口：
-
-- HTTP: `10809`
-- SOCKS5: `10808`
-
-配置示例：
-
-```json
-{
-  "useProxy": true,
-  "proxyUrl": "http://localhost:10809"
-}
-```
-
-### Shadowsocks
-
-Shadowsocks 通常需要配合 HTTP 代理工具使用，如 Privoxy。
-
-配置示例：
-
-```json
-{
-  "useProxy": true,
-  "proxyUrl": "http://localhost:8118"
-}
-```
-
-## 验证代理配置
-
-### 1. 检查代理是否运行
-
-确保你的代理工具正在运行，并且监听在配置的端口上。
-
-### 2. 测试代理连接
-
-可以使用 curl 测试代理是否可用：
-
-```bash
-# Windows (PowerShell)
-curl -x http://localhost:7890 https://api.github.com
-
-# Linux/macOS
-curl -x http://localhost:7890 https://api.github.com
-```
-
-如果返回 GitHub API 响应，说明代理配置正确。
-
-### 3. 查看日志
-
-开启 `loggerinfo` 选项，查看适配器是否通过代理成功连接：
-
-```json
-{
-  "loggerinfo": true
 }
 ```
 
@@ -181,28 +89,3 @@ curl -x http://localhost:7890 https://api.github.com
 
 1. 使用 HTTP 代理而非 HTTPS
 2. 检查代理工具的证书配置
-
-## 性能优化
-
-### 选择合适的代理服务器
-
-- 优先选择地理位置较近的代理
-- 选择带宽充足的代理
-- 避免使用公共代理
-
-### 调整轮询间隔
-
-使用代理时，网络延迟可能增加，建议适当增大轮询间隔：
-
-```json
-{
-  "interval": 60
-}
-```
-
-## 安全建议
-
-1. ✅ 使用可信的代理服务
-2. ✅ 避免在代理 URL 中明文存储密码
-3. ✅ 定期检查代理服务的安全性
-4. ✅ 使用 HTTPS 代理（如果可能）

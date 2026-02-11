@@ -6,6 +6,8 @@
 
 为了让 Koishi 机器人能够代表你的 GitHub 账号进行操作（例如读取事件、发表评论），你需要创建一个 Personal Access Token。
 
+![alt](https://github.com/koishi-shangxue-plugins/koishi-plugin-adapter-github/blob/docs/docs/public/2026-02-11_14-43-48.png?raw=true)
+
 ### 创建步骤
 
 1. 访问 GitHub 的 [Personal Access Token 设置页面](https://github.com/settings/tokens)
@@ -19,7 +21,9 @@
 5. 点击页面底部的 **"Generate token"**
 6. **立即复制生成的 Token**。这个 Token 只会显示一次，请妥善保管
 
-:::warning 安全提示
+:::warning
+安全提示
+
 请妥善保管你的 Token，不要将其泄露给他人或提交到公开的代码仓库中。
 :::
 
@@ -38,7 +42,11 @@
   - **Owner**: 仓库所有者的用户名或组织名
   - **Repo**: 仓库名称
 
+:::warning
+注意，为了确保仓库权限完整，推荐填入由机器人账号创建的仓库
+:::
 示例配置：
+
 ```json
 {
   "token": "ghp_xxxxxxxxxxxxxxxxxxxx",
@@ -56,16 +64,19 @@
 根据你的实际情况选择合适的通信模式：
 
 #### Pull 模式（推荐新手）
+
 - 适合没有公网 IP 的用户
 - 支持代理配置
 - 配置简单，开箱即用
 
 #### Webhook 模式（推荐进阶用户）
+
 - 实时性更好
 - 需要公网 IP 和域名
 - 需要在 GitHub 配置 Webhook
 
 详细的模式配置说明请参考：
+
 - [Pull 模式配置](/markdown/mode/pull)
 - [Webhook 模式配置](/markdown/mode/webhook)
 
