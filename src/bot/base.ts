@@ -11,6 +11,7 @@ export class GitHubBot extends Bot<Context, Config>
   graphql: typeof graphql;
   protected _timer: () => void;
   protected _lastEventIds: Map<string, string> = new Map();
+  protected _ownedRepos: Set<string> = new Set(); // 存储自己拥有的仓库
 
   constructor(ctx: Context, config: Config)
   {

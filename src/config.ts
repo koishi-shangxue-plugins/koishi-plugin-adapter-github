@@ -54,7 +54,7 @@ export const Config: Schema<Config> = Schema.intersect([
     Schema.intersect([
       Schema.object({
         mode: Schema.const('pull'),
-        interval: Schema.number().default(20).description('轮询间隔 (单位：秒，默认 20 秒)'),
+        interval: Schema.number().default(20).description('轮询间隔 (单位：秒)<br>注意：对于别人的仓库，此处轮询间隔约 1 min'),
         useProxy: Schema.boolean().default(false).description('是否使用代理'),
       }),
       Schema.union([

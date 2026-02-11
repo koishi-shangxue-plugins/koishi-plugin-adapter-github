@@ -26,24 +26,49 @@ export class GitHubBotWithEventHandling extends GitHubBot
         const repoKey = `${repo.owner}/${repo.repo}`;
         try
         {
-          // 先验证仓库是否存在
-          await this.octokit.repos.get({
+          // 验证仓库是否存在并检查权限
+          const { data: repoData } = await this.octokit.repos.get({
             owner: repo.owner,
             repo: repo.repo,
           });
 
-          // 自动设置仓库订阅为"所有活动"
-          try
+          // 检查是否是自己拥有的仓库
+          const isOwned = repoData.owner.login === this.selfId ||
+            repoData.permissions?.admin ||
+            repoData.permissions?.push;
+
+          if (isOwned)
           {
-            await this.octokit.activity.setRepoSubscription({
+            this._ownedRepos.add(repoKey);
+            this.loggerInfo(`仓库 ${repoKey} 使用 Events API（更快）`);
+
+            // 初始化最新事件 ID
+            const { data: events } = await this.octokit.activity.listRepoEvents({
               owner: repo.owner,
               repo: repo.repo,
-              subscribed: true,
-              ignored: false,
+              per_page: 1,
             });
-          } catch (e: any)
+            if (events.length > 0)
+            {
+              this._lastEventIds.set(repoKey, events[0].id);
+            }
+          } else
           {
-            this.loggerWarn(`设置仓库 ${repoKey} 订阅失败:`, e.message);
+            this.loggerInfo(`仓库 ${repoKey} 使用 Notifications API`);
+
+            // 自动设置仓库订阅为"所有活动"
+            try
+            {
+              await this.octokit.activity.setRepoSubscription({
+                owner: repo.owner,
+                repo: repo.repo,
+                subscribed: true,
+                ignored: false,
+              });
+            } catch (e: any)
+            {
+              this.loggerWarn(`设置仓库 ${repoKey} 订阅失败:`, e.message);
+            }
           }
 
           validRepos.push(repo);
@@ -98,23 +123,77 @@ export class GitHubBotWithEventHandling extends GitHubBot
     }
   }
 
-  // 轮询 GitHub 通知（用于监听 watch 的仓库）
+  // 混合轮询策略：自己的仓库用 Events API，别人的仓库用 Notifications API
   async poll()
   {
+    // 1. 轮询自己拥有的仓库（使用 Events API，更快）
+    for (const repo of this.config.repositories)
+    {
+      const repoKey = `${repo.owner}/${repo.repo}`;
+
+      // 只处理自己拥有的仓库
+      if (!this._ownedRepos.has(repoKey)) continue;
+
+      try
+      {
+        const { data: events } = await this.octokit.activity.listRepoEvents({
+          owner: repo.owner,
+          repo: repo.repo,
+          per_page: 20,
+        });
+
+        const lastEventId = this._lastEventIds.get(repoKey);
+        const newEvents = [];
+        for (const event of events)
+        {
+          if (event.id === lastEventId) break;
+          newEvents.push(event);
+        }
+
+        if (newEvents.length > 0)
+        {
+          this._lastEventIds.set(repoKey, events[0].id);
+          // 逆序处理，确保消息按时间顺序派发
+          for (const event of newEvents.reverse())
+          {
+            await this.handleEvent(event, repo.owner, repo.repo);
+          }
+        }
+      } catch (e)
+      {
+        this.logError(`轮询仓库 ${repoKey} 事件时出错:`, e);
+      }
+    }
+
+    // 2. 轮询通知（用于别人的仓库）
     try
     {
-      // 获取所有未读通知
       const { data: notifications } = await this.octokit.activity.listNotificationsForAuthenticatedUser({
         all: false, // 只获取未读通知
         per_page: 50,
       });
 
-      // 处理所有通知
       for (const notification of notifications)
       {
         const owner = notification.repository.owner.login;
         const repo = notification.repository.name;
         const repoKey = `${owner}/${repo}`;
+
+        // 跳过自己拥有的仓库（已通过 Events API 处理）
+        if (this._ownedRepos.has(repoKey))
+        {
+          // 标记为已读但不处理
+          try
+          {
+            await this.octokit.activity.markThreadAsRead({
+              thread_id: parseInt(notification.id),
+            });
+          } catch (e)
+          {
+            this.logError(`标记通知已读失败: ${notification.id}`, e);
+          }
+          continue;
+        }
 
         this.logInfo(`处理仓库通知: ${repoKey}`);
 
