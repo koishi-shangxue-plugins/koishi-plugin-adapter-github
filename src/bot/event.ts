@@ -95,41 +95,154 @@ export class GitHubBotWithEventHandling extends GitHubBot
     }
   }
 
-  // 轮询 GitHub 事件
+  // 轮询 GitHub 通知（用于监听 watch 的仓库）
   async poll()
   {
-    for (const repo of this.config.repositories)
+    try
     {
-      const repoKey = `${repo.owner}/${repo.repo}`;
-      try
+      // 获取所有未读通知
+      const { data: notifications } = await this.octokit.activity.listNotificationsForAuthenticatedUser({
+        all: false, // 只获取未读通知
+        per_page: 50,
+      });
+
+      // 按仓库分组处理通知
+      for (const notification of notifications)
       {
-        const { data: events } = await this.octokit.activity.listRepoEvents({
-          owner: repo.owner,
-          repo: repo.repo,
-          per_page: 20,
+        const owner = notification.repository.owner.login;
+        const repo = notification.repository.name;
+        const repoKey = `${owner}/${repo}`;
+
+        // 检查是否在监听列表中
+        const isMonitored = this.config.repositories.some(
+          r => r.owner === owner && r.repo === repo
+        );
+        if (!isMonitored)
+        {
+          this.logInfo(`跳过非监听仓库的通知: ${repoKey}`);
+          continue;
+        }
+
+        // 处理通知
+        await this.handleNotification(notification, owner, repo);
+
+        // 标记通知为已读
+        try
+        {
+          await this.octokit.activity.markThreadAsRead({
+            thread_id: parseInt(notification.id),
+          });
+        } catch (e)
+        {
+          this.logError(`标记通知已读失败: ${notification.id}`, e);
+        }
+      }
+    } catch (e)
+    {
+      this.logError('轮询通知时出错:', e);
+    }
+  }
+
+  // 处理 GitHub 通知
+  async handleNotification(notification: any, owner: string, repo: string)
+  {
+    this.logInfo(`处理通知: ${notification.subject.type} - ${notification.subject.title}`);
+
+    // 根据通知类型获取详细信息
+    try
+    {
+      const subjectType = notification.subject.type;
+      const subjectUrl = notification.subject.url;
+
+      // 从 URL 中提取编号
+      const urlParts = subjectUrl.split('/');
+      const number = parseInt(urlParts[urlParts.length - 1]);
+
+      if (isNaN(number))
+      {
+        this.logError(`无法从 URL 解析编号: ${subjectUrl}`);
+        return;
+      }
+
+      // 根据类型获取详细信息并构造事件
+      if (subjectType === 'Issue')
+      {
+        const { data: issue } = await this.octokit.issues.get({
+          owner,
+          repo,
+          issue_number: number,
         });
 
-        const lastEventId = this._lastEventIds.get(repoKey);
-        const newEvents = [];
-        for (const event of events)
-        {
-          if (event.id === lastEventId) break;
-          newEvents.push(event);
-        }
+        // 获取最新评论
+        const { data: comments } = await this.octokit.issues.listComments({
+          owner,
+          repo,
+          issue_number: number,
+          per_page: 1,
+          sort: 'created',
+          direction: 'desc',
+        });
 
-        if (newEvents.length > 0)
+        if (comments.length > 0)
         {
-          this._lastEventIds.set(repoKey, events[0].id);
-          // 逆序处理，确保消息按时间顺序派发
-          for (const event of newEvents.reverse())
-          {
-            await this.handleEvent(event, repo.owner, repo.repo);
-          }
+          // 构造评论事件
+          const event = {
+            id: `notif-${notification.id}`,
+            type: 'IssueCommentEvent',
+            actor: {
+              login: comments[0].user.login,
+              avatar_url: comments[0].user.avatar_url,
+            },
+            payload: {
+              action: 'created',
+              issue: issue,
+              comment: comments[0],
+            },
+            created_at: comments[0].created_at,
+          };
+          await this.handleEvent(event, owner, repo);
         }
-      } catch (e)
+      } else if (subjectType === 'PullRequest')
       {
-        this.logError(`轮询仓库 ${repoKey} 事件时出错:`, e);
+        const { data: pull } = await this.octokit.pulls.get({
+          owner,
+          repo,
+          pull_number: number,
+        });
+
+        // 获取最新评论
+        const { data: comments } = await this.octokit.issues.listComments({
+          owner,
+          repo,
+          issue_number: number,
+          per_page: 1,
+          sort: 'created',
+          direction: 'desc',
+        });
+
+        if (comments.length > 0)
+        {
+          // 构造评论事件
+          const event = {
+            id: `notif-${notification.id}`,
+            type: 'IssueCommentEvent',
+            actor: {
+              login: comments[0].user.login,
+              avatar_url: comments[0].user.avatar_url,
+            },
+            payload: {
+              action: 'created',
+              issue: pull,
+              comment: comments[0],
+            },
+            created_at: comments[0].created_at,
+          };
+          await this.handleEvent(event, owner, repo);
+        }
       }
+    } catch (e)
+    {
+      this.logError(`处理通知失败: ${notification.id}`, e);
     }
   }
 
