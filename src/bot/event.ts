@@ -495,6 +495,33 @@ export class GitHubBotWithEventHandling extends GitHubBot
           forkee: event.payload.forkee,
         });
         break;
+
+      case 'PushEvent':
+        // Push 事件
+        (this.ctx.emit as any)('github/push', {
+          ...eventData,
+          ref: event.payload.ref,
+          before: event.payload.before,
+          after: event.payload.after,
+          commits: event.payload.commits,
+          headCommit: event.payload.head_commit,
+        });
+        break;
+
+      case 'ReleaseEvent':
+        // Release 事件
+        if (event.payload.action)
+        {
+          (this.ctx.emit as any)(`github/release-${event.payload.action}`, {
+            ...eventData,
+            release: event.payload.release,
+          });
+        }
+        (this.ctx.emit as any)('github/release', {
+          ...eventData,
+          release: event.payload.release,
+        });
+        break;
     }
 
     // 派发通用 github/event 事件（包含所有类型）
@@ -665,7 +692,7 @@ export class GitHubBotWithEventHandling extends GitHubBot
   // 处理 webhook 事件
   async handleWebhookEvent(event: any, owner: string, repo: string)
   {
-    this.logInfo(`收到 Webhook 事件: ${event.action || event.type}`);
+    this.logInfo(`收到 Webhook 事件: ${event.action || event.type || '未知'}`);
 
     // 构造类似 GitHub Events API 的事件对象
     let eventType = '';
@@ -717,9 +744,27 @@ export class GitHubBotWithEventHandling extends GitHubBot
       // Workflow Job 事件
       eventType = 'WorkflowJobEvent';
       payload = { workflow_job: event.workflow_job, action: event.action };
+    } else if (event.ref && event.commits)
+    {
+      // Push 事件
+      eventType = 'PushEvent';
+      payload = {
+        ref: event.ref,
+        before: event.before,
+        after: event.after,
+        commits: event.commits,
+        head_commit: event.head_commit,
+        pusher: event.pusher,
+      };
+      actor = event.pusher || event.sender;
+    } else if (event.release)
+    {
+      // Release 事件
+      eventType = 'ReleaseEvent';
+      payload = { release: event.release, action: event.action };
     } else
     {
-      this.logInfo(`未处理的 webhook 事件类型`);
+      this.logInfo(`未处理的 webhook 事件类型，payload keys: ${Object.keys(event).join(', ')}`);
       return;
     }
 
