@@ -381,7 +381,7 @@ export class GitHubInternal {
         issue_number: issueNumber,
         content,
       })
-      this.bot.logInfo(`创建 Issue 反应成功: ${data.id}`)
+      this.bot.logInfo(`创建 Issue 反应成功，反应数据: ${JSON.stringify(data)}`)
       return data.id
     } catch (e) {
       this.bot.logError(`创建 Issue 反应失败`, e)
@@ -410,7 +410,7 @@ export class GitHubInternal {
         comment_id: commentId,
         content,
       })
-      this.bot.logInfo(`创建评论反应成功: ${data.id}`)
+      this.bot.logInfo(`创建评论反应成功，反应数据: ${JSON.stringify(data)}`)
       return data.id
     } catch (e) {
       this.bot.logError(`创建评论反应失败`, e)
@@ -419,23 +419,47 @@ export class GitHubInternal {
   }
 
   /**
-   * 删除反应
+   * 删除 Issue/PR 的反应
    * 注意：只能删除当前认证用户自己创建的反应
    * @param owner 仓库所有者
    * @param repo 仓库名称
+   * @param issueNumber Issue/PR 编号
    * @param reactionId 反应 ID
    */
-  async deleteReaction(owner: string, repo: string, reactionId: number) {
+  async deleteIssueReaction(owner: string, repo: string, issueNumber: number, reactionId: number) {
     try {
-      // GitHub API 删除反应的端点
-      await this.bot.octokit.request('DELETE /repos/{owner}/{repo}/reactions/{reaction_id}', {
+      await this.bot.octokit.request('DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}', {
         owner,
         repo,
+        issue_number: issueNumber,
         reaction_id: reactionId,
       })
-      this.bot.logInfo(`删除反应成功: ${reactionId}`)
+      this.bot.logInfo(`删除 Issue 反应成功: ${reactionId}`)
     } catch (e) {
-      this.bot.logError(`删除反应失败: ${reactionId}`, e)
+      this.bot.logError(`删除 Issue 反应失败: ${reactionId}`, e)
+      throw e
+    }
+  }
+
+  /**
+   * 删除 Issue 评论的反应
+   * 注意：只能删除当前认证用户自己创建的反应
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param commentId 评论 ID
+   * @param reactionId 反应 ID
+   */
+  async deleteIssueCommentReaction(owner: string, repo: string, commentId: number, reactionId: number) {
+    try {
+      await this.bot.octokit.request('DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}', {
+        owner,
+        repo,
+        comment_id: commentId,
+        reaction_id: reactionId,
+      })
+      this.bot.logInfo(`删除评论反应成功: ${reactionId}`)
+    } catch (e) {
+      this.bot.logError(`删除评论反应失败: ${reactionId}`, e)
       throw e
     }
   }
