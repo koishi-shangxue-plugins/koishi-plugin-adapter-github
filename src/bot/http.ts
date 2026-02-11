@@ -7,11 +7,13 @@ import { ProxyAgent, Dispatcher } from 'undici';
  * @param proxyUrl 代理地址 (仅支持http或https协议)
  * @returns 返回一个 Promise<Response>
  */
-export function fetchWithProxy(url: RequestInfo, init?: RequestInit, proxyUrl?: string): Promise<Response> {
+export function fetchWithProxy(url: RequestInfo, init?: RequestInit, proxyUrl?: string): Promise<Response>
+{
   let options: RequestInit = { ...init };
 
   // 如果提供了代理地址，则创建一个 ProxyAgent 并将其设置为 dispatcher
-  if (proxyUrl) {
+  if (proxyUrl)
+  {
     const dispatcher = new ProxyAgent(proxyUrl);
     // Node.js 的 fetch 支持 dispatcher，但 @types/node 可能未更新，我们使用 as any 绕过类型检查
     (options as any).dispatcher = dispatcher;

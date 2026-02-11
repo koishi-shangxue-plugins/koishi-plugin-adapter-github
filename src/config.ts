@@ -1,22 +1,24 @@
-import { Schema } from 'koishi'
+import { Schema } from 'koishi';
 
 // 仓库配置接口
-export interface RepoConfig {
-  owner: string
-  repo: string
+export interface RepoConfig
+{
+  owner: string;
+  repo: string;
 }
 
 // 定义配置项接口
-export interface Config {
-  token: string
-  repositories: RepoConfig[]
-  mode: 'webhook' | 'pull'
-  interval?: number
-  webhookPath?: string
-  webhookSecret?: string
-  useProxy?: boolean
-  proxyUrl?: string
-  loggerinfo?: boolean
+export interface Config
+{
+  token: string;
+  repositories: RepoConfig[];
+  mode: 'webhook' | 'pull';
+  interval?: number;
+  webhookPath?: string;
+  webhookSecret?: string;
+  useProxy?: boolean;
+  proxyUrl?: string;
+  loggerinfo?: boolean;
 }
 
 // 定义配置项 Schema
@@ -70,4 +72,4 @@ export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
     loggerinfo: Schema.boolean().default(false).description("日志调试模式").experimental(),
   }).description("调试设置"),
-])
+]);

@@ -1,11 +1,12 @@
-import { GitHubBotComplete } from '../webhook'
+import { GitHubBotComplete } from '../webhook';
 
 /**
  * GitHub 平台特有的 API
  * 通过 bot.internal 调用
  */
-export class GitHubInternal {
-  constructor(private bot: GitHubBotComplete) {}
+export class GitHubInternal
+{
+  constructor(private bot: GitHubBotComplete) { }
 
   /**
    * 创建 Issue
@@ -23,8 +24,10 @@ export class GitHubInternal {
     body?: string,
     labels?: string[],
     assignees?: string[]
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.issues.create({
         owner,
         repo,
@@ -32,11 +35,12 @@ export class GitHubInternal {
         body: body || '',
         labels: labels || [],
         assignees: assignees || [],
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`创建 Issue 失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`创建 Issue 失败:`, e);
+      throw e;
     }
   }
 
@@ -46,18 +50,21 @@ export class GitHubInternal {
    * @param repo 仓库名称
    * @param issueNumber Issue 编号
    */
-  async closeIssue(owner: string, repo: string, issueNumber: number) {
-    try {
+  async closeIssue(owner: string, repo: string, issueNumber: number)
+  {
+    try
+    {
       const { data } = await this.bot.octokit.issues.update({
         owner,
         repo,
         issue_number: issueNumber,
         state: 'closed',
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`关闭 Issue 失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`关闭 Issue 失败:`, e);
+      throw e;
     }
   }
 
@@ -67,18 +74,21 @@ export class GitHubInternal {
    * @param repo 仓库名称
    * @param issueNumber Issue 编号
    */
-  async reopenIssue(owner: string, repo: string, issueNumber: number) {
-    try {
+  async reopenIssue(owner: string, repo: string, issueNumber: number)
+  {
+    try
+    {
       const { data } = await this.bot.octokit.issues.update({
         owner,
         repo,
         issue_number: issueNumber,
         state: 'open',
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`重新打开 Issue 失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`重新打开 Issue 失败:`, e);
+      throw e;
     }
   }
 
@@ -94,18 +104,21 @@ export class GitHubInternal {
     repo: string,
     issueNumber: number,
     labels: string[]
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.issues.addLabels({
         owner,
         repo,
         issue_number: issueNumber,
         labels,
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`添加标签失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`添加标签失败:`, e);
+      throw e;
     }
   }
 
@@ -121,17 +134,20 @@ export class GitHubInternal {
     repo: string,
     issueNumber: number,
     label: string
-  ) {
-    try {
+  )
+  {
+    try
+    {
       await this.bot.octokit.issues.removeLabel({
         owner,
         repo,
         issue_number: issueNumber,
         name: label,
-      })
-    } catch (e) {
-      this.bot.logError(`移除标签失败:`, e)
-      throw e
+      });
+    } catch (e)
+    {
+      this.bot.logError(`移除标签失败:`, e);
+      throw e;
     }
   }
 
@@ -147,18 +163,21 @@ export class GitHubInternal {
     repo: string,
     issueNumber: number,
     assignees: string[]
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.issues.addAssignees({
         owner,
         repo,
         issue_number: issueNumber,
         assignees,
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`分配用户失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`分配用户失败:`, e);
+      throw e;
     }
   }
 
@@ -174,18 +193,21 @@ export class GitHubInternal {
     repo: string,
     issueNumber: number,
     assignees: string[]
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.issues.removeAssignees({
         owner,
         repo,
         issue_number: issueNumber,
         assignees,
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`移除分配用户失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`移除分配用户失败:`, e);
+      throw e;
     }
   }
 
@@ -205,8 +227,10 @@ export class GitHubInternal {
     head: string,
     base: string,
     body?: string
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.pulls.create({
         owner,
         repo,
@@ -214,11 +238,12 @@ export class GitHubInternal {
         head,
         base,
         body: body || '',
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`创建 Pull Request 失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`创建 Pull Request 失败:`, e);
+      throw e;
     }
   }
 
@@ -228,18 +253,21 @@ export class GitHubInternal {
    * @param repo 仓库名称
    * @param pullNumber PR 编号
    */
-  async closePullRequest(owner: string, repo: string, pullNumber: number) {
-    try {
+  async closePullRequest(owner: string, repo: string, pullNumber: number)
+  {
+    try
+    {
       const { data } = await this.bot.octokit.pulls.update({
         owner,
         repo,
         pull_number: pullNumber,
         state: 'closed',
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`关闭 Pull Request 失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`关闭 Pull Request 失败:`, e);
+      throw e;
     }
   }
 
@@ -259,8 +287,10 @@ export class GitHubInternal {
     commitTitle?: string,
     commitMessage?: string,
     mergeMethod?: 'merge' | 'squash' | 'rebase'
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.pulls.merge({
         owner,
         repo,
@@ -268,11 +298,12 @@ export class GitHubInternal {
         commit_title: commitTitle,
         commit_message: commitMessage,
         merge_method: mergeMethod || 'merge',
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`合并 Pull Request 失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`合并 Pull Request 失败:`, e);
+      throw e;
     }
   }
 
@@ -288,18 +319,21 @@ export class GitHubInternal {
     repo: string,
     pullNumber: number,
     labels: string[]
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.issues.addLabels({
         owner,
         repo,
         issue_number: pullNumber,
         labels,
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`添加 PR 标签失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`添加 PR 标签失败:`, e);
+      throw e;
     }
   }
 
@@ -317,19 +351,22 @@ export class GitHubInternal {
     pullNumber: number,
     reviewers?: string[],
     teamReviewers?: string[]
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.pulls.requestReviewers({
         owner,
         repo,
         pull_number: pullNumber,
         reviewers: reviewers || [],
         team_reviewers: teamReviewers || [],
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`请求 PR 审查失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`请求 PR 审查失败:`, e);
+      throw e;
     }
   }
 
@@ -345,18 +382,21 @@ export class GitHubInternal {
     repo: string,
     pullNumber: number,
     assignees: string[]
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.issues.addAssignees({
         owner,
         repo,
         issue_number: pullNumber,
         assignees,
-      })
-      return data
-    } catch (e) {
-      this.bot.logError(`分配 PR 用户失败:`, e)
-      throw e
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`分配 PR 用户失败:`, e);
+      throw e;
     }
   }
 
@@ -373,19 +413,22 @@ export class GitHubInternal {
     repo: string,
     issueNumber: number,
     content: '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes'
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.reactions.createForIssue({
         owner,
         repo,
         issue_number: issueNumber,
         content,
-      })
-      this.bot.logInfo(`创建 Issue 反应成功，反应数据: ${JSON.stringify(data)}`)
-      return data.id
-    } catch (e) {
-      this.bot.logError(`创建 Issue 反应失败`, e)
-      throw e
+      });
+      this.bot.logInfo(`创建 Issue 反应成功，反应数据: ${JSON.stringify(data)}`);
+      return data.id;
+    } catch (e)
+    {
+      this.bot.logError(`创建 Issue 反应失败`, e);
+      throw e;
     }
   }
 
@@ -402,19 +445,22 @@ export class GitHubInternal {
     repo: string,
     commentId: number,
     content: '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes'
-  ) {
-    try {
+  )
+  {
+    try
+    {
       const { data } = await this.bot.octokit.reactions.createForIssueComment({
         owner,
         repo,
         comment_id: commentId,
         content,
-      })
-      this.bot.logInfo(`创建评论反应成功，反应数据: ${JSON.stringify(data)}`)
-      return data.id
-    } catch (e) {
-      this.bot.logError(`创建评论反应失败`, e)
-      throw e
+      });
+      this.bot.logInfo(`创建评论反应成功，反应数据: ${JSON.stringify(data)}`);
+      return data.id;
+    } catch (e)
+    {
+      this.bot.logError(`创建评论反应失败`, e);
+      throw e;
     }
   }
 
@@ -426,18 +472,21 @@ export class GitHubInternal {
    * @param issueNumber Issue/PR 编号
    * @param reactionId 反应 ID
    */
-  async deleteIssueReaction(owner: string, repo: string, issueNumber: number, reactionId: number) {
-    try {
+  async deleteIssueReaction(owner: string, repo: string, issueNumber: number, reactionId: number)
+  {
+    try
+    {
       await this.bot.octokit.request('DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}', {
         owner,
         repo,
         issue_number: issueNumber,
         reaction_id: reactionId,
-      })
-      this.bot.logInfo(`删除 Issue 反应成功: ${reactionId}`)
-    } catch (e) {
-      this.bot.logError(`删除 Issue 反应失败: ${reactionId}`, e)
-      throw e
+      });
+      this.bot.logInfo(`删除 Issue 反应成功: ${reactionId}`);
+    } catch (e)
+    {
+      this.bot.logError(`删除 Issue 反应失败: ${reactionId}`, e);
+      throw e;
     }
   }
 
@@ -449,18 +498,21 @@ export class GitHubInternal {
    * @param commentId 评论 ID
    * @param reactionId 反应 ID
    */
-  async deleteIssueCommentReaction(owner: string, repo: string, commentId: number, reactionId: number) {
-    try {
+  async deleteIssueCommentReaction(owner: string, repo: string, commentId: number, reactionId: number)
+  {
+    try
+    {
       await this.bot.octokit.request('DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}', {
         owner,
         repo,
         comment_id: commentId,
         reaction_id: reactionId,
-      })
-      this.bot.logInfo(`删除评论反应成功: ${reactionId}`)
-    } catch (e) {
-      this.bot.logError(`删除评论反应失败: ${reactionId}`, e)
-      throw e
+      });
+      this.bot.logInfo(`删除评论反应成功: ${reactionId}`);
+    } catch (e)
+    {
+      this.bot.logError(`删除评论反应失败: ${reactionId}`, e);
+      throw e;
     }
   }
 }
