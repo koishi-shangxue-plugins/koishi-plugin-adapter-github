@@ -359,4 +359,106 @@ export class GitHubInternal {
       throw e
     }
   }
+
+  /**
+   * 创建 Issue/PR 的反应
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param issueNumber Issue/PR 编号
+   * @param content 反应类型（+1/-1/laugh/confused/heart/hooray/rocket/eyes）
+   * @returns 返回反应 ID
+   */
+  async createIssueReaction(
+    owner: string,
+    repo: string,
+    issueNumber: number,
+    content: '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes'
+  ) {
+    try {
+      const { data } = await this.bot.octokit.reactions.createForIssue({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        content,
+      })
+      this.bot.logInfo(`创建 Issue 反应成功: ${data.id}`)
+      return data.id
+    } catch (e) {
+      this.bot.logError(`创建 Issue 反应失败`, e)
+      throw e
+    }
+  }
+
+  /**
+   * 创建 Issue 评论的反应
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param commentId 评论 ID
+   * @param content 反应类型（+1/-1/laugh/confused/heart/hooray/rocket/eyes）
+   * @returns 返回反应 ID
+   */
+  async createIssueCommentReaction(
+    owner: string,
+    repo: string,
+    commentId: number,
+    content: '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes'
+  ) {
+    try {
+      const { data } = await this.bot.octokit.reactions.createForIssueComment({
+        owner,
+        repo,
+        comment_id: commentId,
+        content,
+      })
+      this.bot.logInfo(`创建评论反应成功: ${data.id}`)
+      return data.id
+    } catch (e) {
+      this.bot.logError(`创建评论反应失败`, e)
+      throw e
+    }
+  }
+
+  /**
+   * 删除 Issue/PR 的反应（通过反应 ID）
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param issueNumber Issue/PR 编号
+   * @param reactionId 反应 ID
+   */
+  async deleteIssueReaction(owner: string, repo: string, issueNumber: number, reactionId: number) {
+    try {
+      await this.bot.octokit.reactions.deleteForIssue({
+        owner,
+        repo,
+        issue_number: issueNumber,
+        reaction_id: reactionId,
+      })
+      this.bot.logInfo(`删除 Issue 反应成功: ${reactionId}`)
+    } catch (e) {
+      this.bot.logError(`删除 Issue 反应失败: ${reactionId}`, e)
+      throw e
+    }
+  }
+
+  /**
+   * 删除 Issue 评论的反应（通过反应 ID）
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param commentId 评论 ID
+   * @param reactionId 反应 ID
+   */
+  async deleteIssueCommentReaction(owner: string, repo: string, commentId: number, reactionId: number) {
+    try {
+      await this.bot.octokit.reactions.deleteForIssueComment({
+        owner,
+        repo,
+        comment_id: commentId,
+        reaction_id: reactionId,
+      })
+      this.bot.logInfo(`删除评论反应成功: ${reactionId}`)
+    } catch (e) {
+      this.bot.logError(`删除评论反应失败: ${reactionId}`, e)
+      throw e
+    }
+  }
 }

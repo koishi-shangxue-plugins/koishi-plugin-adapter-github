@@ -3,69 +3,6 @@ import { GitHubBotWithAPI } from './api'
 
 // 扩展 GitHubBot 类，添加反应相关方法
 export class GitHubBotWithReaction extends GitHubBotWithAPI {
-  /**
-   * 创建反应（GitHub Reaction）
-   * @param channelId 频道 ID，格式：owner/repo:type:number（如：owner/repo:issues:1）
-   * @param messageId 消息 ID，可以是评论 ID 或特殊标识（'issue'、'pull'、'discussion'）
-   * @param emoji 表情符号（支持：👍 👎 😄 🎉 😕 ❤️ 🚀 👀）
-   * @throws {Error} 当频道 ID 无效或评论 ID 无效时抛出错误
-   */
-  async createReaction(channelId: string, messageId: string, emoji: string): Promise<void> {
-    const parsed = this.parseChannelId(channelId)
-    if (!parsed) throw new Error('Invalid channel ID')
-
-    const { owner, repo, type, number } = parsed
-
-    // GitHub 支持的反应类型映射
-    const reactionMap: Record<string, string> = {
-      '👍': '+1',
-      '👎': '-1',
-      '😄': 'laugh',
-      '🎉': 'hooray',
-      '😕': 'confused',
-      '❤️': 'heart',
-      '🚀': 'rocket',
-      '👀': 'eyes',
-    }
-
-    const content = reactionMap[emoji] || emoji
-
-    try {
-      if (type === 'issues' || type === 'pull') {
-        if (messageId === 'issue' || messageId === 'pull') {
-          // 对 Issue/PR 本身添加反应
-          await this.octokit.reactions.createForIssue({
-            owner,
-            repo,
-            issue_number: number,
-            content: content as '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes',
-          })
-        } else {
-          // 对评论添加反应
-          const commentId = parseInt(messageId)
-          if (isNaN(commentId)) {
-            throw new Error(`无效的评论 ID: ${messageId}`)
-          }
-          await this.octokit.reactions.createForIssueComment({
-            owner,
-            repo,
-            comment_id: commentId,
-            content: content as '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes',
-          })
-        }
-      }
-    } catch (e) {
-      this.logError(`创建反应失败: ${emoji}`, e)
-      throw e
-    }
-  }
-
-  // 删除反应
-  async deleteReaction(channelId: string, messageId: string, emoji: string): Promise<void> {
-    // GitHub API 不直接支持删除特定反应，需要先获取反应 ID
-    this.logInfo('GitHub 删除反应需要反应 ID，暂不支持')
-  }
-
   // 获取反应列表
   async getReactionList(channelId: string, messageId: string, emoji: string): Promise<Universal.List<Universal.User>> {
     const parsed = this.parseChannelId(channelId)

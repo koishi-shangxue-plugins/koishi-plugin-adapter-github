@@ -6,6 +6,20 @@ import { GitHubBotWithReaction } from './reaction'
  */
 export class GitHubBotWithUnsupported extends GitHubBotWithReaction {
   /**
+   * 添加反应 请使用 bot.internal API
+   */
+  async createReaction(channelId: string, messageId: string, emoji: string): Promise<void> {
+  }
+
+  /**
+   * 删除反应 请使用 bot.internal API
+   */
+  async deleteReaction(channelId: string, messageId: string, emoji: string): Promise<void> {
+    // GitHub API 不直接支持删除特定反应，需要先获取反应 ID
+    this.logInfo('GitHub 删除反应需要反应 ID，暂不支持')
+  }
+
+  /**
    * 广播消息（不支持）
    */
   async broadcast(...args: any[]): Promise<any> {
