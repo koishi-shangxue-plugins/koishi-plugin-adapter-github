@@ -515,4 +515,179 @@ export class GitHubInternal
       throw e;
     }
   }
+
+  /**
+   * 获取仓库的工作流列表
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   */
+  async listWorkflows(owner: string, repo: string)
+  {
+    try
+    {
+      const { data } = await this.bot.octokit.actions.listRepoWorkflows({
+        owner,
+        repo,
+      });
+      return data.workflows;
+    } catch (e)
+    {
+      this.bot.logError(`获取工作流列表失败:`, e);
+      throw e;
+    }
+  }
+
+  /**
+   * 获取工作流详情
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param workflowId 工作流 ID 或文件名
+   */
+  async getWorkflow(owner: string, repo: string, workflowId: number | string)
+  {
+    try
+    {
+      const { data } = await this.bot.octokit.actions.getWorkflow({
+        owner,
+        repo,
+        workflow_id: workflowId,
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`获取工作流详情失败:`, e);
+      throw e;
+    }
+  }
+
+  /**
+   * 触发工作流运行
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param workflowId 工作流 ID 或文件名
+   * @param ref 分支或标签名称
+   * @param inputs 工作流输入参数
+   */
+  async triggerWorkflow(
+    owner: string,
+    repo: string,
+    workflowId: number | string,
+    ref: string,
+    inputs?: Record<string, string>
+  )
+  {
+    try
+    {
+      await this.bot.octokit.actions.createWorkflowDispatch({
+        owner,
+        repo,
+        workflow_id: workflowId,
+        ref,
+        inputs: inputs || {},
+      });
+      this.bot.logInfo(`触发工作流成功: ${workflowId}`);
+    } catch (e)
+    {
+      this.bot.logError(`触发工作流失败:`, e);
+      throw e;
+    }
+  }
+
+  /**
+   * 获取工作流运行列表
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param workflowId 工作流 ID（可选）
+   * @param status 运行状态（可选）
+   */
+  async listWorkflowRuns(
+    owner: string,
+    repo: string,
+    workflowId?: number | string,
+    status?: 'completed' | 'action_required' | 'cancelled' | 'failure' | 'neutral' | 'skipped' | 'stale' | 'success' | 'timed_out' | 'in_progress' | 'queued' | 'requested' | 'waiting'
+  )
+  {
+    try
+    {
+      const params: any = { owner, repo, per_page: 30 };
+      if (workflowId) params.workflow_id = workflowId;
+      if (status) params.status = status;
+
+      const { data } = await this.bot.octokit.actions.listWorkflowRuns(params);
+      return data.workflow_runs;
+    } catch (e)
+    {
+      this.bot.logError(`获取工作流运行列表失败:`, e);
+      throw e;
+    }
+  }
+
+  /**
+   * 获取工作流运行详情
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param runId 运行 ID
+   */
+  async getWorkflowRun(owner: string, repo: string, runId: number)
+  {
+    try
+    {
+      const { data } = await this.bot.octokit.actions.getWorkflowRun({
+        owner,
+        repo,
+        run_id: runId,
+      });
+      return data;
+    } catch (e)
+    {
+      this.bot.logError(`获取工作流运行详情失败:`, e);
+      throw e;
+    }
+  }
+
+  /**
+   * 取消工作流运行
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param runId 运行 ID
+   */
+  async cancelWorkflowRun(owner: string, repo: string, runId: number)
+  {
+    try
+    {
+      await this.bot.octokit.actions.cancelWorkflowRun({
+        owner,
+        repo,
+        run_id: runId,
+      });
+      this.bot.logInfo(`取消工作流运行成功: ${runId}`);
+    } catch (e)
+    {
+      this.bot.logError(`取消工作流运行失败:`, e);
+      throw e;
+    }
+  }
+
+  /**
+   * 重新运行工作流
+   * @param owner 仓库所有者
+   * @param repo 仓库名称
+   * @param runId 运行 ID
+   */
+  async rerunWorkflow(owner: string, repo: string, runId: number)
+  {
+    try
+    {
+      await this.bot.octokit.actions.reRunWorkflow({
+        owner,
+        repo,
+        run_id: runId,
+      });
+      this.bot.logInfo(`重新运行工作流成功: ${runId}`);
+    } catch (e)
+    {
+      this.bot.logError(`重新运行工作流失败:`, e);
+      throw e;
+    }
+  }
 }

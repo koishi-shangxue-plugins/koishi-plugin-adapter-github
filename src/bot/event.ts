@@ -40,7 +40,6 @@ export class GitHubBotWithEventHandling extends GitHubBot
           if (isOwned)
           {
             this._ownedRepos.add(repoKey);
-            this.loggerInfo(`仓库 ${repoKey} 使用 Events API（更快）`);
 
             // 初始化最新事件 ID
             const { data: events } = await this.octokit.activity.listRepoEvents({
@@ -54,8 +53,6 @@ export class GitHubBotWithEventHandling extends GitHubBot
             }
           } else
           {
-            this.loggerInfo(`仓库 ${repoKey} 使用 Notifications API`);
-
             // 自动设置仓库订阅为"所有活动"
             try
             {
@@ -156,6 +153,7 @@ export class GitHubBotWithEventHandling extends GitHubBot
           // 逆序处理，确保消息按时间顺序派发
           for (const event of newEvents.reverse())
           {
+            this.logInfo(`收到事件: ${event.type} - ${event.actor.login}`);
             await this.handleEvent(event, repo.owner, repo.repo);
           }
         }
@@ -330,6 +328,20 @@ export class GitHubBotWithEventHandling extends GitHubBot
     }
   }
 
+  // 处理 star 和 fork 事件
+  private handleStarForkEvent(event: any, owner: string, repo: string)
+  {
+    // 派发 GitHub 特殊事件
+    this.dispatchGitHubEvent(event, owner, repo);
+  }
+
+  // 处理 workflow 事件
+  private handleWorkflowEvent(event: any, owner: string, repo: string)
+  {
+    // 派发 GitHub 特殊事件
+    this.dispatchGitHubEvent(event, owner, repo);
+  }
+
   // 派发 GitHub 特殊事件
   private dispatchGitHubEvent(event: any, owner: string, repo: string)
   {
@@ -433,6 +445,56 @@ export class GitHubBotWithEventHandling extends GitHubBot
           comment: event.payload.comment,
         });
         break;
+
+      case 'WorkflowRunEvent':
+        // 派发 github/workflow-run-{action} 事件
+        if (event.payload.action)
+        {
+          (this.ctx.emit as any)(`github/workflow-run-${event.payload.action}`, {
+            ...eventData,
+            workflowRun: event.payload.workflow_run,
+            workflow: event.payload.workflow,
+          });
+        }
+        // 派发通用 github/workflow-run 事件
+        (this.ctx.emit as any)('github/workflow-run', {
+          ...eventData,
+          workflowRun: event.payload.workflow_run,
+          workflow: event.payload.workflow,
+        });
+        break;
+
+      case 'WorkflowJobEvent':
+        // 派发 github/workflow-job-{action} 事件
+        if (event.payload.action)
+        {
+          (this.ctx.emit as any)(`github/workflow-job-${event.payload.action}`, {
+            ...eventData,
+            workflowJob: event.payload.workflow_job,
+          });
+        }
+        // 派发通用 github/workflow-job 事件
+        (this.ctx.emit as any)('github/workflow-job', {
+          ...eventData,
+          workflowJob: event.payload.workflow_job,
+        });
+        break;
+
+      case 'WatchEvent':
+        // Star 事件（GitHub API 中 star 事件类型是 WatchEvent）
+        (this.ctx.emit as any)('github/star', {
+          ...eventData,
+          action: event.payload.action || 'started',
+        });
+        break;
+
+      case 'ForkEvent':
+        // Fork 事件
+        (this.ctx.emit as any)('github/fork', {
+          ...eventData,
+          forkee: event.payload.forkee,
+        });
+        break;
     }
 
     // 派发通用 github/event 事件（包含所有类型）
@@ -450,6 +512,20 @@ export class GitHubBotWithEventHandling extends GitHubBot
     }
 
     this.logInfo(`事件详情: ${JSON.stringify(event, null, 2)}`);
+
+    // 处理特殊事件（只记录日志，不创建会话）
+    if (event.type === 'WorkflowRunEvent' || event.type === 'WorkflowJobEvent')
+    {
+      this.handleWorkflowEvent(event, owner, repo);
+      return;
+    }
+
+    // 处理 star 和 fork 事件（只记录日志，不创建会话）
+    if (event.type === 'WatchEvent' || event.type === 'ForkEvent')
+    {
+      this.handleStarForkEvent(event, owner, repo);
+      return;
+    }
 
     const session = this.session({
       type: 'message',
@@ -620,6 +696,27 @@ export class GitHubBotWithEventHandling extends GitHubBot
     {
       eventType = 'DiscussionEvent';
       payload = { discussion: event.discussion, action: event.action };
+    } else if (event.forkee)
+    {
+      // Fork 事件
+      eventType = 'ForkEvent';
+      payload = { forkee: event.forkee };
+      actor = event.forkee.owner;
+    } else if (event.action === 'started' && event.repository)
+    {
+      // Star 事件（webhook 中 star 事件的 action 是 'started'）
+      eventType = 'WatchEvent';
+      payload = { action: event.action };
+    } else if (event.workflow_run)
+    {
+      // Workflow Run 事件
+      eventType = 'WorkflowRunEvent';
+      payload = { workflow_run: event.workflow_run, workflow: event.workflow, action: event.action };
+    } else if (event.workflow_job)
+    {
+      // Workflow Job 事件
+      eventType = 'WorkflowJobEvent';
+      payload = { workflow_job: event.workflow_job, action: event.action };
     } else
     {
       this.logInfo(`未处理的 webhook 事件类型`);
