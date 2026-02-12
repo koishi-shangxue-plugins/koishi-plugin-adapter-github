@@ -10,6 +10,9 @@ export class GitHubBotWithEventHandling extends GitHubBot
   {
     try
     {
+      // 确保 octokit 已初始化
+      await this.ensureOctokitReady();
+
       // 获取当前认证用户信息
       const { data: user } = await this.octokit.users.getAuthenticated();
       this.selfId = user.login;

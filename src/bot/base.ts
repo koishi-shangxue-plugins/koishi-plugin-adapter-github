@@ -1,17 +1,20 @@
 import { Context, Bot, Universal } from 'koishi';
-import { Octokit } from '@octokit/rest';
-import { graphql } from '@octokit/graphql';
 import { fetchWithProxy } from './http';
 import { Config } from '../config';
+
+// 动态导入类型
+type Octokit = import('@octokit/rest').Octokit;
+type GraphQLFunction = typeof import('@octokit/graphql').graphql;
 
 // GitHub 机器人基础类
 export class GitHubBot extends Bot<Context, Config>
 {
   octokit: Octokit;
-  graphql: typeof graphql;
+  graphql: GraphQLFunction;
   protected _timer: () => void;
   protected _lastEventIds: Map<string, string> = new Map();
   protected _ownedRepos: Set<string> = new Set(); // 存储自己拥有的仓库
+  private _clientsReady: Promise<void>;
 
   constructor(ctx: Context, config: Config)
   {
@@ -28,16 +31,28 @@ export class GitHubBot extends Bot<Context, Config>
       }
     };
 
-    // 初始化 REST API 客户端
-    this.octokit = new Octokit(commonOptions);
+    // 异步初始化 REST 和 GraphQL 客户端（使用动态 import）
+    this._clientsReady = Promise.all([
+      import('@octokit/rest').then(({ Octokit }) =>
+      {
+        this.octokit = new Octokit(commonOptions);
+      }),
+      import('@octokit/graphql').then(({ graphql }) =>
+      {
+        this.graphql = graphql.defaults({
+          headers: {
+            authorization: `token ${config.token}`,
+          },
+          request: commonOptions.request,
+        });
+      })
+    ]).then(() => { });
+  }
 
-    // 初始化 GraphQL API 客户端
-    this.graphql = graphql.defaults({
-      headers: {
-        authorization: `token ${config.token}`,
-      },
-      request: commonOptions.request,
-    });
+  // 确保客户端已初始化
+  async ensureOctokitReady(): Promise<void>
+  {
+    await this._clientsReady;
   }
 
   // 日志函数
