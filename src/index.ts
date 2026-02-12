@@ -28,8 +28,7 @@ export const usage = `
 - **Webhook 模式**：实时接收 GitHub 事件推送（需要公网 URL），支持完整接收 GitHub 事件
 - **Pull 模式**：定时轮询获取事件（支持代理 且 无需公网 URL），部分事件不支持，例如 Discussion 事件
 
-详细配置说明请参考 [README 文档](https://koishi-shangxue-plugins.github.io/koishi-plugin-adapter-github/)
-`;
+详细配置说明 请参考 <a href="https://koishi-shangxue-plugins.github.io/koishi-plugin-adapter-github/" target="_blank" class="iirose-link">README 文档</a>`;
 
 // 插件入口
 export function apply(ctx: Context, config: Config)
