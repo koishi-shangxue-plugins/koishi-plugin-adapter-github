@@ -160,9 +160,16 @@ export class GitHubBotWithEventHandling extends GitHubBot
             await this.handleEvent(event, repo.owner, repo.repo);
           }
         }
-      } catch (e)
+      } catch (e: any)
       {
-        this.logError(`轮询仓库 ${repoKey} 事件时出错:`, e);
+        // 网络错误使用 warn 级别，避免日志过于冗长
+        if (e.status === 500 || e.status === 502 || e.status === 503 || e.code === 'EHOSTUNREACH' || e.code === 'ETIMEDOUT' || e.code === 'ECONNRESET')
+        {
+          this.loggerWarn(`轮询仓库 ${repoKey} 事件时网络异常 (${e.status || e.code})，将在下次轮询重试`);
+        } else
+        {
+          this.logError(`轮询仓库 ${repoKey} 事件时出错:`, e);
+        }
       }
     }
 
@@ -189,9 +196,16 @@ export class GitHubBotWithEventHandling extends GitHubBot
             await this.octokit.activity.markThreadAsRead({
               thread_id: parseInt(notification.id),
             });
-          } catch (e)
+          } catch (e: any)
           {
-            this.logError(`标记通知已读失败: ${notification.id}`, e);
+            // 网络错误降级为 warn
+            if (e.status === 500 || e.status === 502 || e.status === 503 || e.code === 'EHOSTUNREACH' || e.code === 'ETIMEDOUT' || e.code === 'ECONNRESET')
+            {
+              this.loggerWarn(`标记通知已读时网络异常: ${notification.id}`);
+            } else
+            {
+              this.logError(`标记通知已读失败: ${notification.id}`, e);
+            }
           }
           continue;
         }
@@ -207,14 +221,28 @@ export class GitHubBotWithEventHandling extends GitHubBot
           await this.octokit.activity.markThreadAsRead({
             thread_id: parseInt(notification.id),
           });
-        } catch (e)
+        } catch (e: any)
         {
-          this.logError(`标记通知已读失败: ${notification.id}`, e);
+          // 网络错误降级为 warn
+          if (e.status === 500 || e.status === 502 || e.status === 503 || e.code === 'EHOSTUNREACH' || e.code === 'ETIMEDOUT' || e.code === 'ECONNRESET')
+          {
+            this.loggerWarn(`标记通知已读时网络异常: ${notification.id}`);
+          } else
+          {
+            this.logError(`标记通知已读失败: ${notification.id}`, e);
+          }
         }
       }
-    } catch (e)
+    } catch (e: any)
     {
-      this.logError('轮询通知时出错:', e);
+      // 网络错误使用 warn 级别
+      if (e.status === 500 || e.status === 502 || e.status === 503 || e.code === 'EHOSTUNREACH' || e.code === 'ETIMEDOUT' || e.code === 'ECONNRESET')
+      {
+        this.loggerWarn(`轮询通知时网络异常 (${e.status || e.code})，将在下次轮询重试`);
+      } else
+      {
+        this.logError('轮询通知时出错:', e);
+      }
     }
   }
 
