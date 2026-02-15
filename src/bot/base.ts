@@ -1,4 +1,4 @@
-import { Context, Bot, Universal, MessageEncoder } from 'koishi';
+import { Context, Bot, Universal } from 'koishi';
 import { fetchWithProxy } from './http';
 import { Config } from '../config';
 import { GitHubMessageEncoder } from '../message/encoder';
