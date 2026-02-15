@@ -9,6 +9,20 @@ export class GitHubInternal
   constructor(private bot: GitHubBotComplete) { }
 
   /**
+   * 检查静默模式
+   * @returns 如果处于静默模式返回 true
+   */
+  private checkSilentMode(): boolean
+  {
+    if (this.bot.config.silentMode)
+    {
+      this.bot.loggerWarn('静默模式已启用，internal API 方法不可用');
+      return true;
+    }
+    return false;
+  }
+
+  /**
    * 创建 Issue
    * @param owner 仓库所有者
    * @param repo 仓库名称
@@ -26,6 +40,8 @@ export class GitHubInternal
     assignees?: string[]
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.issues.create({
@@ -52,6 +68,8 @@ export class GitHubInternal
    */
   async closeIssue(owner: string, repo: string, issueNumber: number)
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.issues.update({
@@ -76,6 +94,8 @@ export class GitHubInternal
    */
   async reopenIssue(owner: string, repo: string, issueNumber: number)
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.issues.update({
@@ -106,6 +126,8 @@ export class GitHubInternal
     labels: string[]
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.issues.addLabels({
@@ -136,6 +158,8 @@ export class GitHubInternal
     label: string
   )
   {
+    if (this.checkSilentMode()) return;
+
     try
     {
       await this.bot.octokit.issues.removeLabel({
@@ -165,6 +189,8 @@ export class GitHubInternal
     assignees: string[]
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.issues.addAssignees({
@@ -195,6 +221,8 @@ export class GitHubInternal
     assignees: string[]
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.issues.removeAssignees({
@@ -229,6 +257,8 @@ export class GitHubInternal
     body?: string
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.pulls.create({
@@ -255,6 +285,8 @@ export class GitHubInternal
    */
   async closePullRequest(owner: string, repo: string, pullNumber: number)
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.pulls.update({
@@ -289,6 +321,8 @@ export class GitHubInternal
     mergeMethod?: 'merge' | 'squash' | 'rebase'
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.pulls.merge({
@@ -321,6 +355,8 @@ export class GitHubInternal
     labels: string[]
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.issues.addLabels({
@@ -353,6 +389,8 @@ export class GitHubInternal
     teamReviewers?: string[]
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.pulls.requestReviewers({
@@ -384,6 +422,8 @@ export class GitHubInternal
     assignees: string[]
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.issues.addAssignees({
@@ -415,6 +455,8 @@ export class GitHubInternal
     content: '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes'
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.reactions.createForIssue({
@@ -447,6 +489,8 @@ export class GitHubInternal
     content: '+1' | '-1' | 'laugh' | 'confused' | 'heart' | 'hooray' | 'rocket' | 'eyes'
   )
   {
+    if (this.checkSilentMode()) return null;
+
     try
     {
       const { data } = await this.bot.octokit.reactions.createForIssueComment({
@@ -474,6 +518,8 @@ export class GitHubInternal
    */
   async deleteIssueReaction(owner: string, repo: string, issueNumber: number, reactionId: number)
   {
+    if (this.checkSilentMode()) return;
+
     try
     {
       await this.bot.octokit.request('DELETE /repos/{owner}/{repo}/issues/{issue_number}/reactions/{reaction_id}', {
@@ -500,6 +546,8 @@ export class GitHubInternal
    */
   async deleteIssueCommentReaction(owner: string, repo: string, commentId: number, reactionId: number)
   {
+    if (this.checkSilentMode()) return;
+
     try
     {
       await this.bot.octokit.request('DELETE /repos/{owner}/{repo}/issues/comments/{comment_id}/reactions/{reaction_id}', {
@@ -576,6 +624,8 @@ export class GitHubInternal
     inputs?: Record<string, string>
   )
   {
+    if (this.checkSilentMode()) return;
+
     try
     {
       await this.bot.octokit.actions.createWorkflowDispatch({
@@ -653,6 +703,8 @@ export class GitHubInternal
    */
   async cancelWorkflowRun(owner: string, repo: string, runId: number)
   {
+    if (this.checkSilentMode()) return;
+
     try
     {
       await this.bot.octokit.actions.cancelWorkflowRun({
@@ -676,6 +728,8 @@ export class GitHubInternal
    */
   async rerunWorkflow(owner: string, repo: string, runId: number)
   {
+    if (this.checkSilentMode()) return;
+
     try
     {
       await this.bot.octokit.actions.reRunWorkflow({

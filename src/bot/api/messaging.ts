@@ -8,6 +8,13 @@ export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
   // 发送消息实现
   async sendMessage(channelId: string, content: Fragment, guildId?: string)
   {
+    // 静默模式检查
+    if (this.config.silentMode)
+    {
+      this.loggerWarn('静默模式已启用，sendMessage 方法不可用');
+      return [];
+    }
+
     // 解析 channelId: owner/repo:type:number
     const parts = channelId.split(':');
     if (parts.length !== 3) return [];
@@ -124,6 +131,13 @@ export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
   // 删除消息
   async deleteMessage(channelId: string, messageId: string): Promise<void>
   {
+    // 静默模式检查
+    if (this.config.silentMode)
+    {
+      this.loggerWarn('静默模式已启用，deleteMessage 方法不可用');
+      return;
+    }
+
     const parsed = this.parseChannelId(channelId);
     if (!parsed) throw new Error('Invalid channel ID');
 
@@ -150,6 +164,13 @@ export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
   // 编辑消息
   async editMessage(channelId: string, messageId: string, content: Fragment): Promise<void>
   {
+    // 静默模式检查
+    if (this.config.silentMode)
+    {
+      this.loggerWarn('静默模式已启用，editMessage 方法不可用');
+      return;
+    }
+
     const parsed = this.parseChannelId(channelId);
     if (!parsed) throw new Error('Invalid channel ID');
 

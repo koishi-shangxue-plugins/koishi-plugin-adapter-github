@@ -19,6 +19,7 @@ export interface Config
   useProxy?: boolean;
   proxyUrl?: string;
   loggerinfo?: boolean;
+  silentMode?: boolean;
 }
 
 // 定义配置项 Schema
@@ -68,6 +69,10 @@ export const Config: Schema<Config> = Schema.intersect([
       ]),
     ]),
   ]).description('模式配置'),
+
+  Schema.object({
+    silentMode: Schema.boolean().default(false).description('是否以静默模式运行？<br>开启后，不会向 GitHub 发送任何可见内容，包括 send、sendMessage 等方法都不再可用，仅单向接收 GitHub 消息、响应必要的 webhook ping 事件。'),
+  }).description('静默模式'),
 
   Schema.object({
     loggerinfo: Schema.boolean().default(false).description("日志调试模式").experimental(),
