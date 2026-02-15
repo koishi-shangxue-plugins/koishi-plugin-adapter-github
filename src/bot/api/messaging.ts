@@ -17,13 +17,10 @@ export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
     }
 
     // 解析 channelId: owner/repo:type:number
-    const parts = channelId.split(':');
-    if (parts.length !== 3) return [];
+    const parsed = parseChannelId(channelId);
+    if (!parsed) return [];
 
-    const [repoPrefix, type, numberStr] = parts;
-    const [owner, repo] = repoPrefix.split('/');
-    const number = parseInt(numberStr);
-    if (isNaN(number) || !owner || !repo) return [];
+    const { owner, repo, type, number } = parsed;
 
     // 使用消息编码器将 Fragment 转换为纯文本
     const body = await encodeMessage(this, content, channelId);
