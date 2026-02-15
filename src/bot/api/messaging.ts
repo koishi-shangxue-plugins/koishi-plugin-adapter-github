@@ -1,6 +1,7 @@
 import { Fragment } from 'koishi';
 import { GitHubBotWithEventHandling } from '../event';
 import { encodeMessage } from '../../message/message';
+import { parseChannelId } from '../../message/utils';
 
 // 扩展 GitHubBot 类，添加消息发送方法
 export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
@@ -91,7 +92,7 @@ export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
   // 获取消息
   async getMessage(channelId: string, messageId: string)
   {
-    const parsed = this.parseChannelId(channelId);
+    const parsed = parseChannelId(channelId);
     if (!parsed) throw new Error('Invalid channel ID');
 
     const { owner, repo, type, number } = parsed;
@@ -138,7 +139,7 @@ export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
       return;
     }
 
-    const parsed = this.parseChannelId(channelId);
+    const parsed = parseChannelId(channelId);
     if (!parsed) throw new Error('Invalid channel ID');
 
     const { owner, repo, type } = parsed;
@@ -171,7 +172,7 @@ export class GitHubBotWithMessaging extends GitHubBotWithEventHandling
       return;
     }
 
-    const parsed = this.parseChannelId(channelId);
+    const parsed = parseChannelId(channelId);
     if (!parsed) throw new Error('Invalid channel ID');
 
     const { owner, repo, type } = parsed;

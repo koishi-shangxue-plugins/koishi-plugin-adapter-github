@@ -88,19 +88,6 @@ export class GitHubBot extends Bot<Context, Config>
     this.loggerError(message, ...args);
   }
 
-  // 解析 channelId 的辅助方法
-  parseChannelId(channelId: string): { owner: string; repo: string; type: string; number: number; } | null
-  {
-    const parts = channelId.split(':');
-    if (parts.length !== 3) return null;
-
-    const [repoPrefix, type, numberStr] = parts;
-    const [owner, repo] = repoPrefix.split('/');
-    const number = parseInt(numberStr);
-
-    if (isNaN(number) || !owner || !repo) return null;
-    return { owner, repo, type, number };
-  }
 
 
   // 停止机器人

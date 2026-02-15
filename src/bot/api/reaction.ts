@@ -1,5 +1,6 @@
 import { Universal } from 'koishi';
 import { GitHubBotWithAPI } from './api';
+import { parseChannelId } from '../../message/utils';
 
 // 扩展 GitHubBot 类，添加反应相关方法
 export class GitHubBotWithReaction extends GitHubBotWithAPI
@@ -7,7 +8,7 @@ export class GitHubBotWithReaction extends GitHubBotWithAPI
   // 获取反应列表
   async getReactionList(channelId: string, messageId: string, emoji: string): Promise<Universal.List<Universal.User>>
   {
-    const parsed = this.parseChannelId(channelId);
+    const parsed = parseChannelId(channelId);
     if (!parsed) throw new Error('Invalid channel ID');
 
     const { owner, repo, type, number } = parsed;
@@ -62,7 +63,7 @@ export class GitHubBotWithReaction extends GitHubBotWithAPI
   // 获取群组成员列表（Issue/PR 的参与者）
   async getGuildMemberList(guildId: string): Promise<Universal.List<Universal.GuildMember>>
   {
-    const parsed = this.parseChannelId(guildId);
+    const parsed = parseChannelId(guildId);
     if (!parsed) throw new Error('Invalid guild ID');
 
     const { owner, repo, type, number } = parsed;

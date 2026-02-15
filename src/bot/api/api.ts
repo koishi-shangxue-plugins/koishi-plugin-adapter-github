@@ -1,5 +1,6 @@
 import { Universal } from 'koishi';
 import { GitHubBotWithMessaging } from './messaging';
+import { parseChannelId } from '../../message/utils';
 
 // 扩展 GitHubBot 类，添加 Satori API 方法
 export class GitHubBotWithAPI extends GitHubBotWithMessaging
@@ -37,19 +38,14 @@ export class GitHubBotWithAPI extends GitHubBotWithMessaging
   async getGuild(guildId: string): Promise<Universal.Guild>
   {
     // 解析 guildId: owner/repo:type:number
-    const parts = guildId.split(':');
-    if (parts.length !== 3)
+    const parsed = parseChannelId(guildId);
+    if (!parsed)
     {
       return { id: guildId, name: guildId };
     }
 
-    const [repoPrefix, type, numberStr] = parts;
-    const [owner, repo] = repoPrefix.split('/');
-    const number = parseInt(numberStr);
-    if (isNaN(number) || !owner || !repo)
-    {
-      return { id: guildId, name: guildId };
-    }
+    const { owner, repo, type, number } = parsed;
+    const repoPrefix = `${owner}/${repo}`;
 
     try
     {
@@ -220,7 +216,7 @@ export class GitHubBotWithAPI extends GitHubBotWithMessaging
   // 更新频道（更新 Issue/PR 标题）
   async updateChannel(channelId: string, data: Partial<Universal.Channel>): Promise<void>
   {
-    const parsed = this.parseChannelId(channelId);
+    const parsed = parseChannelId(channelId);
     if (!parsed) throw new Error('Invalid channel ID');
 
     const { owner, repo, number } = parsed;
@@ -243,7 +239,7 @@ export class GitHubBotWithAPI extends GitHubBotWithMessaging
   // 删除频道（关闭 Issue/PR）
   async deleteChannel(channelId: string): Promise<void>
   {
-    const parsed = this.parseChannelId(channelId);
+    const parsed = parseChannelId(channelId);
     if (!parsed) throw new Error('Invalid channel ID');
 
     const { owner, repo, number } = parsed;

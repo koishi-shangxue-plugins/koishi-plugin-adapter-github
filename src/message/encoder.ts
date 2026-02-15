@@ -1,7 +1,7 @@
 import { Context, MessageEncoder, h } from 'koishi';
 import { } from '@koishijs/assets';
 import { GitHubBotComplete } from '../bot/webhook';
-import { transformUrl } from './utils';
+import { transformUrl, parseChannelId } from './utils';
 
 /**
  * GitHub 消息编码器
@@ -23,21 +23,14 @@ export class GitHubMessageEncoder extends MessageEncoder<Context, GitHubBotCompl
     }
 
     // 解析 channelId: owner/repo:type:number
-    const parts = this.channelId.split(':');
-    if (parts.length !== 3)
+    const parsed = parseChannelId(this.channelId);
+    if (!parsed)
     {
       this.buffer = '';
       return;
     }
 
-    const [repoPrefix, type, numberStr] = parts;
-    const [owner, repo] = repoPrefix.split('/');
-    const number = parseInt(numberStr);
-    if (isNaN(number) || !owner || !repo)
-    {
-      this.buffer = '';
-      return;
-    }
+    const { owner, repo, type, number } = parsed;
 
     try
     {

@@ -3,6 +3,24 @@ import { } from '@koishijs/assets';
 import { GitHubBot } from '../bot/base';
 
 /**
+ * 解析频道 ID
+ * @param channelId 格式：owner/repo:type:number
+ * @returns 解析结果或 null
+ */
+export function parseChannelId(channelId: string): { owner: string; repo: string; type: string; number: number; } | null
+{
+  const parts = channelId.split(':');
+  if (parts.length !== 3) return null;
+
+  const [repoPrefix, type, numberStr] = parts;
+  const [owner, repo] = repoPrefix.split('/');
+  const number = parseInt(numberStr);
+
+  if (isNaN(number) || !owner || !repo) return null;
+  return { owner, repo, type, number };
+}
+
+/**
  * 使用 assets 服务转存非 HTTPS 协议的资源
  */
 export async function transformUrl(bot: GitHubBot, elementString: string): Promise<string | null>
