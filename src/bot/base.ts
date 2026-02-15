@@ -1,6 +1,7 @@
-import { Context, Bot, Universal } from 'koishi';
+import { Context, Bot, Universal, MessageEncoder } from 'koishi';
 import { fetchWithProxy } from './http';
 import { Config } from '../config';
+import { GitHubMessageEncoder } from '../message/encoder';
 
 // 动态导入类型
 type Octokit = import('@octokit/rest').Octokit;
@@ -9,6 +10,8 @@ type GraphQLFunction = typeof import('@octokit/graphql').graphql;
 // GitHub 机器人基础类
 export class GitHubBot extends Bot<Context, Config>
 {
+  static MessageEncoder = GitHubMessageEncoder;
+
   octokit: Octokit;
   graphql: GraphQLFunction;
   protected _timer: () => void;
