@@ -229,6 +229,13 @@ export class GitHubBotWithEventHandling extends GitHubBot
       const subjectType = notification.subject.type;
       const subjectUrl = notification.subject.url;
 
+      // 检查 URL 是否存在
+      if (!subjectUrl)
+      {
+        this.logInfo(`通知类型 ${subjectType} 没有 URL，跳过处理`);
+        return;
+      }
+
       // 从 URL 中提取编号
       const urlParts = subjectUrl.split('/');
       const number = parseInt(urlParts[urlParts.length - 1]);
