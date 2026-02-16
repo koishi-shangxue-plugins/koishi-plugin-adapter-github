@@ -1,6 +1,7 @@
 import { Universal } from 'koishi';
 import { GitHubBotWithMessaging } from './messaging';
 import { parseChannelId } from '../../message/utils';
+import { parseRepository } from '../../config';
 
 // 扩展 GitHubBot 类，添加 Satori API 方法
 export class GitHubBotWithAPI extends GitHubBotWithMessaging
@@ -114,20 +115,30 @@ export class GitHubBotWithAPI extends GitHubBotWithMessaging
     {
       for (const repo of this.config.repositories)
       {
+        // 解析仓库字符串
+        const parsed = parseRepository(repo.repository);
+        if (!parsed)
+        {
+          this.loggerWarn(`仓库格式错误: ${repo.repository}，跳过`);
+          continue;
+        }
+
+        const { owner, repo: repoName } = parsed;
+
         try
         {
           const { data: repoData } = await this.octokit.repos.get({
-            owner: repo.owner,
-            repo: repo.repo,
+            owner,
+            repo: repoName,
           });
 
           guilds.push({
-            id: `${repo.owner}/${repo.repo}`,
+            id: `${owner}/${repoName}`,
             name: repoData.full_name,
           });
         } catch (e)
         {
-          this.logError(`获取仓库信息失败: ${repo.owner}/${repo.repo}`, e);
+          this.logError(`获取仓库信息失败: ${owner}/${repoName}`, e);
         }
       }
     }

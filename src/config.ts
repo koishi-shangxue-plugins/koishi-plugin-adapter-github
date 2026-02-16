@@ -3,8 +3,18 @@ import { Schema } from 'koishi';
 // 仓库配置接口
 export interface RepoConfig
 {
-  owner: string;
-  repo: string;
+  repository: string; // 格式：owner/repo
+}
+
+// 解析仓库字符串为 owner 和 repo
+export function parseRepository(repository: string): { owner: string; repo: string; } | null
+{
+  const parts = repository.trim().split('/');
+  if (parts.length !== 2 || !parts[0] || !parts[1])
+  {
+    return null;
+  }
+  return { owner: parts[0], repo: parts[1] };
 }
 
 // 定义配置项接口
@@ -32,29 +42,27 @@ export const Config: Schema<Config> = Schema.intersect([
     mode: Schema.union([
       Schema.const('webhook').description('server（完整支持）'),
       Schema.const('pull').description('polling（部分事件受限）')
-    ]).default('pull').description('通信模式<br>-> 相关接入方法 请参考文档'),
+    ]).default('webhook').description('通信模式<br>-> 相关接入方法 请参考文档'),
   }).description('通信模式选择'),
 
   Schema.union([
     Schema.intersect([
       Schema.object({
-        mode: Schema.const('webhook').required(),
+        mode: Schema.const('webhook'),
         webhookPath: Schema.string().role('link').default('/github/webhook').description('Webhook 路径<br>默认地址：`http://127.0.0.1:5140/github/webhook`'),
         webhookSecret: Schema.string().description('Webhook 密钥（可选，用于验证请求）').role('secret'),
       }),
     ]),
     Schema.intersect([
       Schema.object({
-        mode: Schema.const('pull'),
+        mode: Schema.const('pull').required(),
         repositories: Schema.array(Schema.object({
-          owner: Schema.string().description('仓库所有者 (Owner)'),
-          repo: Schema.string().description('仓库名称 (Repo)'),
+          repository: Schema.string().description('Owner/Repo').pattern(/^[^\/]+\/[^\/]+$/),
         })).role('table').default([
           {
-            "owner": "koishi-shangxue-plugins",
-            "repo": "koishi-plugin-adapter-github"
+            "repository": "koishi-shangxue-plugins/koishi-plugin-adapter-github"
           }
-        ]).description('监听的仓库列表<br>请填入机器人创建的仓库以确保权限完整'),
+        ]).description('监听的仓库列表<br>请填入机器人创建的仓库以确保权限完整<br>格式：Owner/Repo'),
         interval: Schema.number().default(20).description('轮询间隔 (单位：秒)<br>注意：对于别人的仓库，此处轮询间隔约 1 min'),
         useProxy: Schema.boolean().default(false).description('是否使用代理'),
       }),

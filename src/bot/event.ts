@@ -1,6 +1,7 @@
 import { h, Universal } from 'koishi';
 import { GitHubBot } from './base';
 import { decodeMarkdown } from '../message/markdown';
+import { parseRepository } from '../config';
 
 // 扩展 GitHubBot 类，添加事件处理方法
 export class GitHubBotWithEventHandling extends GitHubBot
@@ -35,10 +36,19 @@ export class GitHubBotWithEventHandling extends GitHubBot
         const validRepos: typeof this.config.repositories = [];
         for (const repo of this.config.repositories)
         {
-          const repoKey = `${repo.owner}/${repo.repo}`;
+          // 解析仓库字符串
+          const parsed = parseRepository(repo.repository);
+          if (!parsed)
+          {
+            this.loggerWarn(`仓库格式错误: ${repo.repository}，已自动跳过（正确格式：owner/repo）`);
+            continue;
+          }
+
+          const { owner, repo: repoName } = parsed;
+          const repoKey = `${owner}/${repoName}`;
 
           // Pull 模式下不支持通配符
-          if (repo.owner === '*' || repo.repo === '*')
+          if (owner === '*' || repoName === '*')
           {
             this.loggerWarn(`Pull 模式不支持通配符仓库配置: ${repoKey}，已自动跳过`);
             continue;
@@ -48,8 +58,8 @@ export class GitHubBotWithEventHandling extends GitHubBot
           {
             // 验证仓库是否存在并检查权限
             const { data: repoData } = await this.octokit.repos.get({
-              owner: repo.owner,
-              repo: repo.repo,
+              owner,
+              repo: repoName,
             });
 
             // 检查是否是自己拥有的仓库
@@ -66,8 +76,8 @@ export class GitHubBotWithEventHandling extends GitHubBot
               try
               {
                 await this.octokit.activity.setRepoSubscription({
-                  owner: repo.owner,
-                  repo: repo.repo,
+                  owner,
+                  repo: repoName,
                   subscribed: true,
                   ignored: false,
                 });
@@ -102,7 +112,7 @@ export class GitHubBotWithEventHandling extends GitHubBot
         this.config.repositories = validRepos;
 
         this.status = Universal.Status.ONLINE;
-        const repoList = validRepos.map(r => `${r.owner}/${r.repo}`).join(', ');
+        const repoList = validRepos.map(r => r.repository).join(', ');
         this.loggerInfo(`GitHub 机器人已上线：${this.selfId} (监听仓库：${repoList})`);
 
         // 构建通信模式信息
@@ -151,7 +161,16 @@ export class GitHubBotWithEventHandling extends GitHubBot
     // 1. 轮询自己拥有的仓库（使用 Events API，更快）
     for (const repo of this.config.repositories)
     {
-      const repoKey = `${repo.owner}/${repo.repo}`;
+      // 解析仓库字符串
+      const parsed = parseRepository(repo.repository);
+      if (!parsed)
+      {
+        this.loggerWarn(`仓库格式错误: ${repo.repository}，跳过轮询`);
+        continue;
+      }
+
+      const { owner, repo: repoName } = parsed;
+      const repoKey = `${owner}/${repoName}`;
 
       // 只处理自己拥有的仓库
       if (!this._ownedRepos.has(repoKey)) continue;
@@ -159,8 +178,8 @@ export class GitHubBotWithEventHandling extends GitHubBot
       try
       {
         const { data: events } = await this.octokit.activity.listRepoEvents({
-          owner: repo.owner,
-          repo: repo.repo,
+          owner,
+          repo: repoName,
           per_page: 20,
         });
 
@@ -205,7 +224,7 @@ export class GitHubBotWithEventHandling extends GitHubBot
           for (const event of newEvents.reverse())
           {
             this.logInfo(`处理事件: ${event.type} - ${event.actor.login}`);
-            await this.handleEvent(event, repo.owner, repo.repo);
+            await this.handleEvent(event, owner, repoName);
           }
         }
       } catch (e: any)
