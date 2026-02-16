@@ -66,22 +66,7 @@ export function registerWebhookRouter(ctx: Context, bot: GitHubBot, config: Conf
 
       bot.loggerInfo(`仓库信息: ${owner}/${repo}`);
 
-      // 检查是否在监听列表中（支持通配符）
-      const isMonitored = config.repositories.some(r =>
-      {
-        // 支持通配符 * 匹配所有
-        const ownerMatch = r.owner === '*' || r.owner === owner;
-        const repoMatch = r.repo === '*' || r.repo === repo;
-        return ownerMatch && repoMatch;
-      });
-
-      if (!isMonitored)
-      {
-        bot.loggerInfo(`收到未监听仓库的 webhook: ${owner}/${repo}`);
-        koaCtx.status = 200;
-        koaCtx.body = { message: 'Repository not monitored' };
-        return;
-      }
+      // Webhook 模式下接收所有仓库的事件，不进行过滤
 
       // 处理事件
       try

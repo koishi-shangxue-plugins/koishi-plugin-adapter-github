@@ -11,7 +11,7 @@ export interface RepoConfig
 export interface Config
 {
   token: string;
-  repositories: RepoConfig[];
+  repositories?: RepoConfig[]; // 仅在 pull 模式下需要
   mode: 'webhook' | 'pull';
   interval?: number;
   webhookPath?: string;
@@ -26,15 +26,6 @@ export interface Config
 export const Config: Schema<Config> = Schema.intersect([
   Schema.object({
     token: Schema.string().required().description('GitHub Personal Access Token (PAT)').role('secret'),
-    repositories: Schema.array(Schema.object({
-      owner: Schema.string().description('仓库所有者 (Owner)'),
-      repo: Schema.string().description('仓库名称 (Repo)'),
-    })).role('table').default([
-      {
-        "owner": "koishi-shangxue-plugins",
-        "repo": "koishi-plugin-adapter-github"
-      }
-    ]).description('监听的仓库列表<br>-> Pull 模式：请填入机器人创建的仓库以确保权限完整<br>-> Webhook 模式：支持通配符 `*` (表示监听所有仓库)'),
   }).description('基础设置'),
 
   Schema.object({
@@ -48,13 +39,22 @@ export const Config: Schema<Config> = Schema.intersect([
     Schema.intersect([
       Schema.object({
         mode: Schema.const('webhook').required(),
-        webhookPath: Schema.string().default('/github/webhook').description('Webhook 路径<br>默认地址：`http://127.0.0.1:5140/github/webhook`'),
+        webhookPath: Schema.string().role('link').default('/github/webhook').description('Webhook 路径<br>默认地址：`http://127.0.0.1:5140/github/webhook`'),
         webhookSecret: Schema.string().description('Webhook 密钥（可选，用于验证请求）').role('secret'),
       }),
     ]),
     Schema.intersect([
       Schema.object({
         mode: Schema.const('pull'),
+        repositories: Schema.array(Schema.object({
+          owner: Schema.string().description('仓库所有者 (Owner)'),
+          repo: Schema.string().description('仓库名称 (Repo)'),
+        })).role('table').default([
+          {
+            "owner": "koishi-shangxue-plugins",
+            "repo": "koishi-plugin-adapter-github"
+          }
+        ]).description('监听的仓库列表<br>请填入机器人创建的仓库以确保权限完整'),
         interval: Schema.number().default(20).description('轮询间隔 (单位：秒)<br>注意：对于别人的仓库，此处轮询间隔约 1 min'),
         useProxy: Schema.boolean().default(false).description('是否使用代理'),
       }),

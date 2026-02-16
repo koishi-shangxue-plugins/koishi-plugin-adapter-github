@@ -109,24 +109,29 @@ export class GitHubBotWithAPI extends GitHubBotWithMessaging
   {
     const guilds: Universal.Guild[] = [];
 
-    for (const repo of this.config.repositories)
+    // 仅在 pull 模式下返回配置的仓库列表
+    if (this.config.mode === 'pull' && this.config.repositories)
     {
-      try
+      for (const repo of this.config.repositories)
       {
-        const { data: repoData } = await this.octokit.repos.get({
-          owner: repo.owner,
-          repo: repo.repo,
-        });
+        try
+        {
+          const { data: repoData } = await this.octokit.repos.get({
+            owner: repo.owner,
+            repo: repo.repo,
+          });
 
-        guilds.push({
-          id: `${repo.owner}/${repo.repo}`,
-          name: repoData.full_name,
-        });
-      } catch (e)
-      {
-        this.logError(`获取仓库信息失败: ${repo.owner}/${repo.repo}`, e);
+          guilds.push({
+            id: `${repo.owner}/${repo.repo}`,
+            name: repoData.full_name,
+          });
+        } catch (e)
+        {
+          this.logError(`获取仓库信息失败: ${repo.owner}/${repo.repo}`, e);
+        }
       }
     }
+    // Webhook 模式下返回空列表，因为接收所有仓库的事件
 
     return { data: guilds };
   }

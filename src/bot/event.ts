@@ -22,87 +22,100 @@ export class GitHubBotWithEventHandling extends GitHubBot
         avatar: user.avatar_url,
       };
 
-      // 验证并初始化每个仓库
-      const validRepos: typeof this.config.repositories = [];
-      for (const repo of this.config.repositories)
+      // 仅在 Pull 模式下验证并初始化仓库
+      if (this.config.mode === 'pull')
       {
-        const repoKey = `${repo.owner}/${repo.repo}`;
-
-        // Pull 模式下不支持通配符
-        if (this.config.mode === 'pull' && (repo.owner === '*' || repo.repo === '*'))
+        if (!this.config.repositories || this.config.repositories.length === 0)
         {
-          this.loggerWarn(`Pull 模式不支持通配符仓库配置: ${repoKey}，已自动跳过`);
-          continue;
+          this.loggerError('Pull 模式需要配置 repositories，插件将自动关闭');
+          this.ctx.scope.dispose();
+          return;
         }
 
-        try
+        const validRepos: typeof this.config.repositories = [];
+        for (const repo of this.config.repositories)
         {
-          // 验证仓库是否存在并检查权限
-          const { data: repoData } = await this.octokit.repos.get({
-            owner: repo.owner,
-            repo: repo.repo,
-          });
+          const repoKey = `${repo.owner}/${repo.repo}`;
 
-          // 检查是否是自己拥有的仓库
-          const isOwned = repoData.owner.login === this.selfId ||
-            repoData.permissions?.admin ||
-            repoData.permissions?.push;
+          // Pull 模式下不支持通配符
+          if (repo.owner === '*' || repo.repo === '*')
+          {
+            this.loggerWarn(`Pull 模式不支持通配符仓库配置: ${repoKey}，已自动跳过`);
+            continue;
+          }
 
-          if (isOwned)
+          try
           {
-            this._ownedRepos.add(repoKey);
-          } else
+            // 验证仓库是否存在并检查权限
+            const { data: repoData } = await this.octokit.repos.get({
+              owner: repo.owner,
+              repo: repo.repo,
+            });
+
+            // 检查是否是自己拥有的仓库
+            const isOwned = repoData.owner.login === this.selfId ||
+              repoData.permissions?.admin ||
+              repoData.permissions?.push;
+
+            if (isOwned)
+            {
+              this._ownedRepos.add(repoKey);
+            } else
+            {
+              // 自动设置仓库订阅为"所有活动"
+              try
+              {
+                await this.octokit.activity.setRepoSubscription({
+                  owner: repo.owner,
+                  repo: repo.repo,
+                  subscribed: true,
+                  ignored: false,
+                });
+              } catch (e: any)
+              {
+                this.loggerWarn(`设置仓库 ${repoKey} 订阅失败:`, e.message);
+              }
+            }
+
+            validRepos.push(repo);
+          } catch (e: any)
           {
-            // 自动设置仓库订阅为"所有活动"
-            try
+            if (e.status === 404)
             {
-              await this.octokit.activity.setRepoSubscription({
-                owner: repo.owner,
-                repo: repo.repo,
-                subscribed: true,
-                ignored: false,
-              });
-            } catch (e: any)
+              this.loggerWarn(`仓库 ${repoKey} 不存在或无权访问，已自动跳过`);
+            } else
             {
-              this.loggerWarn(`设置仓库 ${repoKey} 订阅失败:`, e.message);
+              this.loggerError(`初始化仓库 ${repoKey} 失败:`, e);
             }
           }
-
-          validRepos.push(repo);
-        } catch (e: any)
-        {
-          if (e.status === 404)
-          {
-            this.loggerWarn(`仓库 ${repoKey} 不存在或无权访问，已自动跳过`);
-          } else
-          {
-            this.loggerError(`初始化仓库 ${repoKey} 失败:`, e);
-          }
         }
-      }
 
-      // 检查是否有有效的仓库
-      if (validRepos.length === 0)
+        // 检查是否有有效的仓库
+        if (validRepos.length === 0)
+        {
+          this.loggerError('没有可用的仓库，插件将自动关闭');
+          this.ctx.scope.dispose();
+          return;
+        }
+
+        // 更新配置为只包含有效的仓库
+        this.config.repositories = validRepos;
+
+        this.status = Universal.Status.ONLINE;
+        const repoList = validRepos.map(r => `${r.owner}/${r.repo}`).join(', ');
+        this.loggerInfo(`GitHub 机器人已上线：${this.selfId} (监听仓库：${repoList})`);
+
+        // 构建通信模式信息
+        let modeInfo = 'Pull';
+        if (this.config.useProxy && this.config.proxyUrl)
+        {
+          modeInfo += ` (代理：${this.config.proxyUrl})`;
+        }
+      } else
       {
-        this.loggerError('没有可用的仓库，插件将自动关闭');
-        this.ctx.scope.dispose();
-        return;
+        // Webhook 模式
+        this.status = Universal.Status.ONLINE;
       }
-
-      // 更新配置为只包含有效的仓库
-      this.config.repositories = validRepos;
-
-      this.status = Universal.Status.ONLINE;
-      const repoList = validRepos.map(r => `${r.owner}/${r.repo}`).join(', ');
-      this.loggerInfo(`GitHub 机器人已上线：${this.selfId} (监听仓库：${repoList})`);
-
-      // 构建通信模式信息
-      let modeInfo = this.config.mode === 'webhook' ? 'Webhook' : 'Pull';
-      if (this.config.mode === 'pull' && this.config.useProxy && this.config.proxyUrl)
-      {
-        modeInfo += ` (代理：${this.config.proxyUrl})`;
-      }
-      this.loggerInfo(`通信模式：${modeInfo}`);
 
       // 仅在 Pull 模式下启动定时器
       if (this.config.mode === 'pull' && this.ctx.scope.isActive)
@@ -127,6 +140,13 @@ export class GitHubBotWithEventHandling extends GitHubBot
   // 混合轮询策略：自己的仓库用 Events API，别人的仓库用 Notifications API
   async poll(isFirstPoll: boolean = false)
   {
+    // 确保在 pull 模式下且有 repositories 配置
+    if (!this.config.repositories || this.config.repositories.length === 0)
+    {
+      this.loggerWarn('Pull 模式下没有配置仓库，跳过轮询');
+      return;
+    }
+
     // 1. 轮询自己拥有的仓库（使用 Events API，更快）
     for (const repo of this.config.repositories)
     {
