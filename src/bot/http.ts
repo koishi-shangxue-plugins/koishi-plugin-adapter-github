@@ -1,4 +1,4 @@
-import { ProxyAgent, Dispatcher } from 'undici';
+import { ProxyAgent } from 'undici';
 
 /**
  * 使用 Node.js 内置的 fetch 功能进行网络请求，并支持通过参数传入代理地址。

@@ -1,4 +1,3 @@
-import { h } from 'koishi';
 import { } from '@koishijs/assets';
 import { GitHubBot } from '../bot/base';
 
