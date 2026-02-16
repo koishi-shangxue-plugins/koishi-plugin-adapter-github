@@ -403,6 +403,9 @@ export class GitHubBotWithEventHandling extends GitHubBot
       type: event.type,
       action: event.payload?.action,
       timestamp: new Date(event.created_at).getTime(),
+      // 添加 bot 标识，用于多实例去重
+      botId: this.selfId,
+      platform: this.platform,
     };
 
     // 根据事件类型派发不同的自定义事件
