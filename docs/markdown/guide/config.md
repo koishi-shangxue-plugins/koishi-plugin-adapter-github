@@ -17,31 +17,20 @@
 - `read:discussion` - 读取 Discussions
 - `write:discussion` - 发表和修改 Discussions
 
-### repositories
+### silentMode
 
-- **类型**: `Array<{ owner: string, repo: string }>`
-- **必填**: 是
-- **说明**: 监听的仓库列表
+- **类型**: `boolean`
+- **默认值**: `false`
+- **说明**: 静默模式
 
-配置示例：
+开启后，适配器将不会向 GitHub 发送任何内容（如评论、回复等），仅接收事件。适用于：
 
-```json
-{
-  "repositories": [
-    {
-      "owner": "koishi-shangxue-plugins",
-      "repo": "koishi-plugin-adapter-github"
-    },
-    {
-      "owner": "koishijs",
-      "repo": "koishi"
-    }
-  ]
-}
-```
+- 测试和调试场景
+- 只需要监听事件而不需要回复的场景
+- 避免误操作的保护模式
 
-:::tip 提示
-可以同时监听多个仓库，适配器会自动处理所有仓库的事件。
+:::warning 注意
+静默模式下，所有通过 [`bot.sendMessage()`](../dev/apis.md) 等方法发送消息的操作都会被阻止。
 :::
 
 ## 通信模式选择
@@ -65,6 +54,34 @@
 ## Pull 模式配置
 
 当 `mode` 设置为 `'pull'` 时，以下配置项生效：
+
+### repositories
+
+- **类型**: `Array<{ owner: string, repo: string }>`
+- **必填**: 是（仅 Pull 模式）
+- **说明**: 监听的仓库列表
+
+配置示例：
+
+```json
+{
+  "repositories": [
+    {
+      "owner": "koishi-shangxue-plugins",
+      "repo": "koishi-plugin-adapter-github"
+    },
+    {
+      "owner": "koishijs",
+      "repo": "koishi"
+    }
+  ]
+}
+```
+
+:::tip 提示
+- 可以同时监听多个仓库，适配器会自动处理所有仓库的事件
+- 此配置项仅在 Pull 模式下需要配置
+:::
 
 ### interval
 
@@ -145,7 +162,7 @@ http://你的服务器地址:端口/github/webhook
 }
 ```
 
-## 调试设置
+## 高级设置
 
 ### loggerinfo
 
@@ -162,42 +179,3 @@ http://你的服务器地址:端口/github/webhook
 :::tip 提示
 在遇到问题时，建议开启此选项以获取更多调试信息。
 :::
-
-## 完整配置示例
-
-### Pull 模式示例
-
-```json
-{
-  "token": "ghp_xxxxxxxxxxxxxxxxxxxx",
-  "repositories": [
-    {
-      "owner": "koishi-shangxue-plugins",
-      "repo": "koishi-plugin-adapter-github"
-    }
-  ],
-  "mode": "pull",
-  "interval": 30,
-  "useProxy": true,
-  "proxyUrl": "http://localhost:7890",
-  "loggerinfo": false
-}
-```
-
-### Webhook 模式示例
-
-```json
-{
-  "token": "ghp_xxxxxxxxxxxxxxxxxxxx",
-  "repositories": [
-    {
-      "owner": "koishi-shangxue-plugins",
-      "repo": "koishi-plugin-adapter-github"
-    }
-  ],
-  "mode": "webhook",
-  "webhookPath": "/github/webhook",
-  "webhookSecret": "your-secret-key",
-  "loggerinfo": false
-}
-```
