@@ -7,7 +7,7 @@ export const name = 'adapter-github';
 
 export const inject = {
   required: ['logger', 'i18n'],
-  optional: ['assets', 'server']
+  optional: ['server']
 };
 
 // 统一日志输出
@@ -19,7 +19,7 @@ export * from './config';
 export const usage = `
 ---
 
-所需服务：**assets**、logger、i18n、server
+所需服务：logger、i18n、server
 
 ---
 

@@ -50,7 +50,5 @@
     "@octokit/rest": "^22.0.1",
     "undici": "^7.21.0"
   },
-  "devDependencies": {
-    "@koishijs/assets": "^1.1.2"
-  }
+  "devDependencies": { }
 }

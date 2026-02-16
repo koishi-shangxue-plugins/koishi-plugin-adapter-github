@@ -1,7 +1,6 @@
 import { h } from 'koishi';
-import { } from '@koishijs/assets';
 import { GitHubBot } from '../bot/base';
-import { transformUrl } from './utils';
+import { uploadFileToGitHub, parseChannelId } from './utils';
 
 /**
  * 将 Koishi 的 Fragment 转换为纯文本，用于发送到 GitHub
@@ -86,15 +85,24 @@ export async function encodeMessage(bot: GitHubBot, content: h.Fragment, channel
       case 'image': {
         let url = attrs.url || attrs.src;
 
+        // 如果不是 http 开头的 URL，上传到 GitHub
         if (!url.startsWith('http'))
         {
-          const transformedUrl = await transformUrl(bot, h.image(url).toString());
-          if (transformedUrl)
+          const parsed = channelId ? parseChannelId(channelId) : null;
+          if (parsed)
           {
-            url = transformedUrl;
+            const uploadedUrl = await uploadFileToGitHub(bot, parsed.owner, parsed.repo, url);
+            if (uploadedUrl)
+            {
+              url = uploadedUrl;
+            } else
+            {
+              result += '[图片上传失败]';
+              break;
+            }
           } else
           {
-            result += '[图片转存失败]';
+            result += '[图片上传失败：无效的频道ID]';
             break;
           }
         }
@@ -106,15 +114,24 @@ export async function encodeMessage(bot: GitHubBot, content: h.Fragment, channel
       case 'audio': {
         let url = attrs.url || attrs.src;
 
+        // 如果不是 http 开头的 URL，上传到 GitHub
         if (!url.startsWith('http'))
         {
-          const transformedUrl = await transformUrl(bot, h.audio(url).toString());
-          if (transformedUrl)
+          const parsed = channelId ? parseChannelId(channelId) : null;
+          if (parsed)
           {
-            url = transformedUrl;
+            const uploadedUrl = await uploadFileToGitHub(bot, parsed.owner, parsed.repo, url);
+            if (uploadedUrl)
+            {
+              url = uploadedUrl;
+            } else
+            {
+              result += '[音频上传失败]';
+              break;
+            }
           } else
           {
-            result += '[音频转存失败]';
+            result += '[音频上传失败：无效的频道ID]';
             break;
           }
         }
@@ -126,15 +143,24 @@ export async function encodeMessage(bot: GitHubBot, content: h.Fragment, channel
       case 'video': {
         let url = attrs.url || attrs.src;
 
+        // 如果不是 http 开头的 URL，上传到 GitHub
         if (!url.startsWith('http'))
         {
-          const transformedUrl = await transformUrl(bot, h.video(url).toString());
-          if (transformedUrl)
+          const parsed = channelId ? parseChannelId(channelId) : null;
+          if (parsed)
           {
-            url = transformedUrl;
+            const uploadedUrl = await uploadFileToGitHub(bot, parsed.owner, parsed.repo, url);
+            if (uploadedUrl)
+            {
+              url = uploadedUrl;
+            } else
+            {
+              result += '[视频上传失败]';
+              break;
+            }
           } else
           {
-            result += '[视频转存失败]';
+            result += '[视频上传失败：无效的频道ID]';
             break;
           }
         }
@@ -146,15 +172,24 @@ export async function encodeMessage(bot: GitHubBot, content: h.Fragment, channel
       case 'file': {
         let url = attrs.url || attrs.src;
 
+        // 如果不是 http 开头的 URL，上传到 GitHub
         if (!url.startsWith('http'))
         {
-          const transformedUrl = await transformUrl(bot, h.file(url).toString());
-          if (transformedUrl)
+          const parsed = channelId ? parseChannelId(channelId) : null;
+          if (parsed)
           {
-            url = transformedUrl;
+            const uploadedUrl = await uploadFileToGitHub(bot, parsed.owner, parsed.repo, url);
+            if (uploadedUrl)
+            {
+              url = uploadedUrl;
+            } else
+            {
+              result += '[文件上传失败]';
+              break;
+            }
           } else
           {
-            result += '[文件转存失败]';
+            result += '[文件上传失败：无效的频道ID]';
             break;
           }
         }
