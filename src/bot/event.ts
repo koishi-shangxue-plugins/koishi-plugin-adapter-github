@@ -115,6 +115,7 @@ export class GitHubBotWithEventHandling extends GitHubBot
       {
         // Webhook 模式
         this.status = Universal.Status.ONLINE;
+        this.loggerInfo(`GitHub 机器人已上线：${this.selfId}`);
       }
 
       // 仅在 Pull 模式下启动定时器
