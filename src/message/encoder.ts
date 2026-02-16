@@ -1,6 +1,7 @@
 import { Context, MessageEncoder, h } from 'koishi';
+import { } from '@koishijs/assets';
 import { GitHubBotComplete } from '../bot/webhook';
-import { uploadFileToGitHub, parseChannelId } from './utils';
+import { transformUrl, parseChannelId } from './utils';
 
 /**
  * GitHub 消息编码器
@@ -160,24 +161,15 @@ export class GitHubMessageEncoder extends MessageEncoder<Context, GitHubBotCompl
       case 'image': {
         let url = attrs.url || attrs.src;
 
-        // 如果不是 http 开头的 URL，上传到 GitHub
         if (!url.startsWith('http'))
         {
-          const parsed = parseChannelId(this.channelId);
-          if (parsed)
+          const transformedUrl = await transformUrl(this.bot, h.image(url).toString());
+          if (transformedUrl)
           {
-            const uploadedUrl = await uploadFileToGitHub(this.bot, parsed.owner, parsed.repo, url);
-            if (uploadedUrl)
-            {
-              url = uploadedUrl;
-            } else
-            {
-              this.buffer += '[图片上传失败]';
-              break;
-            }
+            url = transformedUrl;
           } else
           {
-            this.buffer += '[图片上传失败：无效的频道ID]';
+            this.buffer += '[图片转存失败]';
             break;
           }
         }
@@ -189,24 +181,15 @@ export class GitHubMessageEncoder extends MessageEncoder<Context, GitHubBotCompl
       case 'audio': {
         let url = attrs.url || attrs.src;
 
-        // 如果不是 http 开头的 URL，上传到 GitHub
         if (!url.startsWith('http'))
         {
-          const parsed = parseChannelId(this.channelId);
-          if (parsed)
+          const transformedUrl = await transformUrl(this.bot, h.audio(url).toString());
+          if (transformedUrl)
           {
-            const uploadedUrl = await uploadFileToGitHub(this.bot, parsed.owner, parsed.repo, url);
-            if (uploadedUrl)
-            {
-              url = uploadedUrl;
-            } else
-            {
-              this.buffer += '[音频上传失败]';
-              break;
-            }
+            url = transformedUrl;
           } else
           {
-            this.buffer += '[音频上传失败：无效的频道ID]';
+            this.buffer += '[音频转存失败]';
             break;
           }
         }
@@ -218,24 +201,15 @@ export class GitHubMessageEncoder extends MessageEncoder<Context, GitHubBotCompl
       case 'video': {
         let url = attrs.url || attrs.src;
 
-        // 如果不是 http 开头的 URL，上传到 GitHub
         if (!url.startsWith('http'))
         {
-          const parsed = parseChannelId(this.channelId);
-          if (parsed)
+          const transformedUrl = await transformUrl(this.bot, h.video(url).toString());
+          if (transformedUrl)
           {
-            const uploadedUrl = await uploadFileToGitHub(this.bot, parsed.owner, parsed.repo, url);
-            if (uploadedUrl)
-            {
-              url = uploadedUrl;
-            } else
-            {
-              this.buffer += '[视频上传失败]';
-              break;
-            }
+            url = transformedUrl;
           } else
           {
-            this.buffer += '[视频上传失败：无效的频道ID]';
+            this.buffer += '[视频转存失败]';
             break;
           }
         }
@@ -247,24 +221,15 @@ export class GitHubMessageEncoder extends MessageEncoder<Context, GitHubBotCompl
       case 'file': {
         let url = attrs.url || attrs.src;
 
-        // 如果不是 http 开头的 URL，上传到 GitHub
         if (!url.startsWith('http'))
         {
-          const parsed = parseChannelId(this.channelId);
-          if (parsed)
+          const transformedUrl = await transformUrl(this.bot, h.file(url).toString());
+          if (transformedUrl)
           {
-            const uploadedUrl = await uploadFileToGitHub(this.bot, parsed.owner, parsed.repo, url);
-            if (uploadedUrl)
-            {
-              url = uploadedUrl;
-            } else
-            {
-              this.buffer += '[文件上传失败]';
-              break;
-            }
+            url = transformedUrl;
           } else
           {
-            this.buffer += '[文件上传失败：无效的频道ID]';
+            this.buffer += '[文件转存失败]';
             break;
           }
         }
