@@ -27,6 +27,14 @@ export class GitHubBotWithEventHandling extends GitHubBot
       for (const repo of this.config.repositories)
       {
         const repoKey = `${repo.owner}/${repo.repo}`;
+
+        // Pull 模式下不支持通配符
+        if (this.config.mode === 'pull' && (repo.owner === '*' || repo.repo === '*'))
+        {
+          this.loggerWarn(`Pull 模式不支持通配符仓库配置: ${repoKey}，已自动跳过`);
+          continue;
+        }
+
         try
         {
           // 验证仓库是否存在并检查权限

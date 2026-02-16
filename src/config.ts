@@ -34,7 +34,7 @@ export const Config: Schema<Config> = Schema.intersect([
         "owner": "koishi-shangxue-plugins",
         "repo": "koishi-plugin-adapter-github"
       }
-    ]).description('监听的仓库列表<br>-> 请填入机器人创建的仓库 以确保权限完整'),
+    ]).description('监听的仓库列表<br>-> Pull 模式：请填入机器人创建的仓库以确保权限完整<br>-> Webhook 模式：支持通配符 `*` (表示监听所有仓库)'),
   }).description('基础设置'),
 
   Schema.object({

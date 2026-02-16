@@ -3,16 +3,16 @@ name: Deploy VitePress Docs to GitHub Pages
 on:
   push:
     branches:
-      - docs  # 在 docs 分支推送时触发
+      - docs # 在 docs 分支推送时触发
     paths:
-      - 'docs/**' # 仅在 docs 目录下的文件发生更改时触发
-  workflow_dispatch:  # 允许手动触发
+      - "docs/**" # 仅在 docs 目录下的文件发生更改时触发
+  workflow_dispatch: # 允许手动触发
 
 # 设置 GITHUB_TOKEN 的权限
 permissions:
-  contents: write  # 允许推送到仓库
-  pages: write     # 允许部署到 GitHub Pages
-  id-token: write  # 允许 OIDC 令牌
+  contents: write # 允许推送到仓库
+  pages: write # 允许部署到 GitHub Pages
+  id-token: write # 允许 OIDC 令牌
 
 jobs:
   deploy:
@@ -22,8 +22,8 @@ jobs:
       - name: Checkout docs branch
         uses: actions/checkout@v4
         with:
-          ref: docs  # 检出 docs 分支
-          path: docs  # 检出到 docs 目录
+          ref: docs # 检出 docs 分支
+          path: docs # 检出到 docs 目录
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -51,6 +51,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/docs/.vitepress/dist
           publish_branch: gh-pages
-          force_orphan: true  # 每次都创建全新的提交，清空历史
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
+          force_orphan: true # 每次都创建全新的提交，清空历史
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"

@@ -66,10 +66,14 @@ export function registerWebhookRouter(ctx: Context, bot: GitHubBot, config: Conf
 
       bot.loggerInfo(`仓库信息: ${owner}/${repo}`);
 
-      // 检查是否在监听列表中
-      const isMonitored = config.repositories.some(
-        r => r.owner === owner && r.repo === repo
-      );
+      // 检查是否在监听列表中（支持通配符）
+      const isMonitored = config.repositories.some(r =>
+      {
+        // 支持通配符 * 匹配所有
+        const ownerMatch = r.owner === '*' || r.owner === owner;
+        const repoMatch = r.repo === '*' || r.repo === repo;
+        return ownerMatch && repoMatch;
+      });
 
       if (!isMonitored)
       {
