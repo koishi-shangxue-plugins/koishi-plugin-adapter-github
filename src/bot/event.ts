@@ -51,17 +51,6 @@ export class GitHubBotWithEventHandling extends GitHubBot
           if (isOwned)
           {
             this._ownedRepos.add(repoKey);
-
-            // 初始化最新事件 ID
-            const { data: events } = await this.octokit.activity.listRepoEvents({
-              owner: repo.owner,
-              repo: repo.repo,
-              per_page: 1,
-            });
-            if (events.length > 0)
-            {
-              this._lastEventIds.set(repoKey, events[0].id);
-            }
           } else
           {
             // 自动设置仓库订阅为"所有活动"
@@ -118,7 +107,11 @@ export class GitHubBotWithEventHandling extends GitHubBot
       // 仅在 Pull 模式下启动定时器
       if (this.config.mode === 'pull' && this.ctx.scope.isActive)
       {
-        this._timer = this.ctx.setInterval(() => this.poll(), this.config.interval * 1000);
+        // 立即进行首次轮询，建立事件基线（不处理事件，只缓存）
+        await this.poll(true); // 传入 true 表示首次轮询，只缓存不处理
+
+        // 启动定时器进行后续轮询
+        this._timer = this.ctx.setInterval(() => this.poll(false), this.config.interval * 1000);
       } else if (this.config.mode === 'pull')
       {
         this.loggerWarn('上下文未激活，跳过定时器创建');
@@ -132,7 +125,7 @@ export class GitHubBotWithEventHandling extends GitHubBot
   }
 
   // 混合轮询策略：自己的仓库用 Events API，别人的仓库用 Notifications API
-  async poll()
+  async poll(isFirstPoll: boolean = false)
   {
     // 1. 轮询自己拥有的仓库（使用 Events API，更快）
     for (const repo of this.config.repositories)
@@ -150,21 +143,47 @@ export class GitHubBotWithEventHandling extends GitHubBot
           per_page: 20,
         });
 
-        const lastEventId = this._lastEventIds.get(repoKey);
-        const newEvents = [];
-        for (const event of events)
+        // 如果是首次轮询，将所有事件 ID 记录为已处理，不处理任何事件
+        if (isFirstPoll)
         {
-          if (event.id === lastEventId) break;
-          newEvents.push(event);
+          const processedIds = new Set<string>();
+          events.forEach(event => processedIds.add(event.id));
+          this._processedEventIds.set(repoKey, processedIds);
+          this.logInfo(`仓库 ${repoKey} 首次轮询，记录 ${processedIds.size} 个历史事件 ID 作为基线`);
+          continue;
         }
+
+        // 获取已处理的事件 ID 集合
+        let processedIds = this._processedEventIds.get(repoKey);
+        if (!processedIds)
+        {
+          // 如果没有记录，初始化一个空集合
+          processedIds = new Set<string>();
+          this._processedEventIds.set(repoKey, processedIds);
+        }
+
+        // 筛选出未处理的新事件
+        const newEvents = events.filter(event => !processedIds.has(event.id));
 
         if (newEvents.length > 0)
         {
-          this._lastEventIds.set(repoKey, events[0].id);
+          this.logInfo(`仓库 ${repoKey} 发现 ${newEvents.length} 个新事件`);
+
+          // 将新事件 ID 添加到已处理集合
+          newEvents.forEach(event => processedIds.add(event.id));
+
+          // 限制已处理 ID 集合的大小，避免内存占用过大（保留最新的 100 个）
+          if (processedIds.size > 100)
+          {
+            const idsArray = Array.from(processedIds);
+            const toKeep = new Set(idsArray.slice(-100));
+            this._processedEventIds.set(repoKey, toKeep);
+          }
+
           // 逆序处理，确保消息按时间顺序派发
           for (const event of newEvents.reverse())
           {
-            this.logInfo(`收到事件: ${event.type} - ${event.actor.login}`);
+            this.logInfo(`处理事件: ${event.type} - ${event.actor.login}`);
             await this.handleEvent(event, repo.owner, repo.repo);
           }
         }

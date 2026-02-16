@@ -15,7 +15,7 @@ export class GitHubBot extends Bot<Context, Config>
   octokit: Octokit;
   graphql: GraphQLFunction;
   protected _timer: () => void;
-  protected _lastEventIds: Map<string, string> = new Map();
+  protected _processedEventIds: Map<string, Set<string>> = new Map(); // 存储每个仓库已处理的事件 ID
   protected _ownedRepos: Set<string> = new Set(); // 存储自己拥有的仓库
   private _clientsReady: Promise<void>;
 
