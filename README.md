@@ -5,5 +5,3 @@
 ## 文档
 
 > [koishi-plugin-adapter-github](https://koishi-shangxue-plugins.github.io/koishi-plugin-adapter-github/)
-
----
