@@ -640,7 +640,9 @@ export class GitHubBotWithEventHandling extends GitHubBot
   async handleEvent(event: any, owner: string, repo: string)
   {
     // 忽略机器人自己产生的事件
-    if (event.actor.login === this.selfId)
+    // 对于 push 事件，actor 可能只有 name 字段，需要额外检查
+    const actorLogin = event.actor?.login || event.actor?.name;
+    if (actorLogin === this.selfId)
     {
       this.logInfo(`忽略机器人自己的事件: ${event.type}`);
       return;
@@ -807,8 +809,6 @@ export class GitHubBotWithEventHandling extends GitHubBot
   // 处理 webhook 事件
   async handleWebhookEvent(event: any, owner: string, repo: string)
   {
-    this.logInfo(`收到 Webhook 事件: ${event.action || event.type || '未知'}`);
-
     // 构造类似 GitHub Events API 的事件对象
     let eventType = '';
     let payload: any = {};
@@ -882,6 +882,10 @@ export class GitHubBotWithEventHandling extends GitHubBot
       this.logInfo(`未处理的 webhook 事件类型，payload keys: ${Object.keys(event).join(', ')}`);
       return;
     }
+
+    // 获取事件描述用于日志
+    const eventDesc = event.action || eventType.replace('Event', '') || '未知';
+    this.logInfo(`收到 Webhook 事件: ${eventDesc}`);
 
     const normalizedEvent = {
       id: `webhook-${Date.now()}`,
