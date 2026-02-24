@@ -4,7 +4,8 @@ import { Config } from './config';
 import { registerWebhookRouter } from './webhook-router';
 
 export const name = 'adapter-github';
-
+export const reusable = true;
+export const filter = false;
 export const inject = {
   required: ['logger', 'i18n'],
   optional: ['assets', 'server']
