@@ -30,6 +30,8 @@ export class GitHubBot extends Bot<Context, Config>
       avatar: '',
     };
     this.selfId = '';
+    // 设置初始状态为离线，等待 start() 方法将其设置为在线
+    this.status = Universal.Status.OFFLINE;
 
     const commonOptions = {
       auth: config.token,

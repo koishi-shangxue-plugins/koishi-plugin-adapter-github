@@ -9,6 +9,9 @@ export class GitHubBotWithEventHandling extends GitHubBot
   // 启动机器人
   async start()
   {
+    // 设置状态为连接中
+    this.status = Universal.Status.CONNECT;
+
     try
     {
       // 确保 octokit 已初始化
