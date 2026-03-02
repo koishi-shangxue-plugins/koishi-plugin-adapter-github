@@ -23,6 +23,14 @@ export class GitHubBot extends Bot<Context, Config>
   {
     super(ctx, config, 'github');
 
+    // 初始化临时的 user 信息，避免在 start() 之前访问时出错
+    this.user = {
+      id: '',
+      name: '',
+      avatar: '',
+    };
+    this.selfId = '';
+
     const commonOptions = {
       auth: config.token,
       request: {
