@@ -19,19 +19,17 @@ export class GitHubBot extends Bot<Context, Config>
   protected _ownedRepos: Set<string> = new Set(); // 存储自己拥有的仓库
   private _clientsReady: Promise<void>;
 
-  constructor(ctx: Context, config: Config)
+  constructor(ctx: Context, config: Config, username: string)
   {
     super(ctx, config, 'github');
 
-    // 初始化临时的 user 信息，避免在 start() 之前访问时出错
+    // 使用传入的 username 初始化 bot 信息
+    this.selfId = username;
     this.user = {
-      id: '',
-      name: '',
+      id: username,
+      name: username,
       avatar: '',
     };
-    this.selfId = '';
-    // 设置初始状态为离线，等待 start() 方法将其设置为在线
-    this.status = Universal.Status.OFFLINE;
 
     const commonOptions = {
       auth: config.token,
@@ -105,7 +103,31 @@ export class GitHubBot extends Bot<Context, Config>
   {
     // 调用 ctx.setInterval 返回的函数来清理定时器
     if (this._timer) this._timer();
+
+    // 设置状态为离线并派发 login-updated
     this.status = Universal.Status.OFFLINE;
-    // this.loggerInfo(`GitHub 机器人已下线：${this.selfId}`)
+    const updateSession = this.session({
+      type: 'login-updated',
+      platform: this.platform,
+      selfId: this.selfId,
+    });
+    this.dispatch(updateSession);
+    this.logInfo('状态更新为 OFFLINE，派发 login-updated 事件');
+
+    // 派发 login-removed 事件，通知 satori 等服务
+    const loginSession = this.session({
+      type: 'login-removed',
+      platform: this.platform,
+      selfId: this.selfId,
+    });
+    this.dispatch(loginSession);
+    this.logInfo('派发 login-removed 事件');
+  }
+
+  // Satori 协议要求的 disconnect 方法
+  async disconnect()
+  {
+    // GitHub 适配器不需要特殊的断开连接逻辑
+    // 所有清理工作在 stop() 方法中完成
   }
 }

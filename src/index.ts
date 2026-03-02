@@ -36,10 +36,38 @@ export function apply(ctx: Context, config: Config)
 {
   ctx.on("ready", async () =>
   {
+    // 先获取 GitHub 用户信息，确定 selfId
+    let username: string;
+    try
+    {
+      // 动态导入 Octokit
+      const { Octokit } = await import('@octokit/rest');
+      const octokit = new Octokit({ auth: config.token });
+      const { data: user } = await octokit.users.getAuthenticated();
+      username = user.login;
+      logger.info(`获取到 GitHub 用户名：${username}`);
+    } catch (error)
+    {
+      logger.error('获取 GitHub 用户信息失败:', error);
+      logger.error('插件将自动关闭');
+      ctx.scope.dispose();
+      return;
+    }
+
     // 创建子上下文，确保 bot 的生命周期与插件绑定
     const botCtx = ctx.guild();
 
-    const bot = new GitHubBot(botCtx, config);
+    // 创建 bot 实例，传入已获取的用户名
+    const bot = new GitHubBot(botCtx, config, username);
+
+    // 立即派发 login-added 事件，通知 satori 等服务 bot 已创建
+    const loginAddedSession = bot.session({
+      type: 'login-added',
+      platform: bot.platform,
+      selfId: bot.selfId,
+    });
+    bot.dispatch(loginAddedSession);
+    logger.info(`派发 login-added 事件: ${bot.selfId}`);
 
     // 如果是 webhook 模式，注册路由
     if (config.mode === 'webhook')

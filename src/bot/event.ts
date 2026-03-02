@@ -6,25 +6,45 @@ import { parseRepository } from '../config';
 // 扩展 GitHubBot 类，添加事件处理方法
 export class GitHubBotWithEventHandling extends GitHubBot
 {
+  // 更新状态并派发 login-updated 事件
+  private updateStatus(status: Universal.Status)
+  {
+    this.status = status;
+
+    // 派发 login-updated 事件
+    const session = this.session({
+      type: 'login-updated',
+      platform: this.platform,
+      selfId: this.selfId,
+    });
+    this.dispatch(session);
+    this.logInfo(`状态更新为 ${status}，派发 login-updated 事件`);
+  }
+
   // 启动机器人
   async start()
   {
-    // 设置状态为连接中
-    this.status = Universal.Status.CONNECT;
+    // 调用父类的 start 方法（会将状态设置为 CONNECT）
+    await super.start();
+
+    // 派发第一次 login-updated（连接中状态）
+    const connectSession = this.session({
+      type: 'login-updated',
+      platform: this.platform,
+      selfId: this.selfId,
+    });
+    this.dispatch(connectSession);
+    this.logInfo('状态为 CONNECT，派发 login-updated 事件');
 
     try
     {
       // 确保 octokit 已初始化
       await this.ensureOctokitReady();
 
-      // 获取当前认证用户信息
+      // 获取当前认证用户信息，更新 avatar
       const { data: user } = await this.octokit.users.getAuthenticated();
-      this.selfId = user.login;
-      this.user = {
-        id: user.login,
-        name: user.login,
-        avatar: user.avatar_url,
-      };
+      // selfId 已在构造函数中设置，这里只更新 avatar
+      this.user.avatar = user.avatar_url;
 
       // 仅在 Pull 模式下验证并初始化仓库
       if (this.config.mode === 'pull')
@@ -114,7 +134,8 @@ export class GitHubBotWithEventHandling extends GitHubBot
         // 更新配置为只包含有效的仓库
         this.config.repositories = validRepos;
 
-        this.status = Universal.Status.ONLINE;
+        // 使用 updateStatus 方法更新状态并派发 login-updated
+        this.updateStatus(Universal.Status.ONLINE);
         const repoList = validRepos.map(r => r.repository).join(', ');
         this.loggerInfo(`GitHub 机器人已上线：${this.selfId} (监听仓库：${repoList})`);
 
@@ -127,7 +148,8 @@ export class GitHubBotWithEventHandling extends GitHubBot
       } else
       {
         // Webhook 模式
-        this.status = Universal.Status.ONLINE;
+        // 使用 updateStatus 方法更新状态并派发 login-updated
+        this.updateStatus(Universal.Status.ONLINE);
         this.loggerInfo(`GitHub 机器人已上线：${this.selfId}`);
       }
 

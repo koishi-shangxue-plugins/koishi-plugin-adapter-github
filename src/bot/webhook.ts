@@ -8,9 +8,9 @@ export class GitHubBotComplete extends GitHubBotWithUnsupported
   // GitHub 平台特有的 API
   internal: GitHubInternal;
 
-  constructor(ctx: any, config: any)
+  constructor(ctx: any, config: any, username: string)
   {
-    super(ctx, config);
+    super(ctx, config, username);
     // 初始化 internal API
     this.internal = new GitHubInternal(this);
   }
