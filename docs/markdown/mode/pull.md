@@ -72,9 +72,9 @@ Pull 模式通过 [GitHub Events API](https://docs.github.com/en/rest/activity/e
 ❌ **DiscussionCommentEvent** - Discussion 评论（API 不支持）
 
 :::warning 注意
-如果需要完整的 Discussion 事件支持，请使用 [Webhook 模式](/markdown/mode/webhook)。
+如果需要完整的 Discussion 事件支持，请使用 [Webhook 模式](./../mode/webhook)。
 :::
 
 ## 代理配置
 
-Pull 模式支持通过代理访问 GitHub API，详见 [代理配置](/markdown/mode/proxy)。
+Pull 模式支持通过代理访问 GitHub API，详见 [代理配置](./../mode/proxy)。

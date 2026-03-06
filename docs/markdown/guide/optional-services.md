@@ -79,5 +79,5 @@ A: 请检查：
 
 ## 下一步
 
-- 查看 [配置说明](/markdown/guide/config) 了解适配器的详细配置
-- 查看 [消息发送](/markdown/dev/message) 了解如何发送富媒体消息
+- 查看 [配置说明](./../guide/config) 了解适配器的详细配置
+- 查看 [消息发送](./../dev/message) 了解如何发送富媒体消息

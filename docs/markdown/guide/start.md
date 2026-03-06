@@ -94,8 +94,8 @@
 
 详细的模式配置说明请参考：
 
-- [Pull 模式配置](/markdown/mode/pull)
-- [Webhook 模式配置](/markdown/mode/webhook)
+- [Pull 模式配置](./../mode/pull)
+- [Webhook 模式配置](./../mode/webhook)
 
 ## 4. 启动机器人
 
@@ -109,9 +109,3 @@
 ## 5. 测试功能
 
 在你配置的仓库中创建一个 Issue 或发表评论，机器人应该能够接收到相应的事件。
-
-## 下一步
-
-- 查看 [配置说明](/markdown/guide/config) 了解更多配置选项
-- 查看 [事件系统](/markdown/dev/events) 了解如何监听 GitHub 事件
-- 查看 [常见问题](/markdown/guide/faq) 解决使用中遇到的问题

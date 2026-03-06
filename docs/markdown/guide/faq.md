@@ -6,7 +6,7 @@
 
 ### Q: 如何获取 GitHub Token？
 
-A: 请参考 [快速开始](/markdown/guide/start) 中的详细步骤。简要流程：
+A: 请参考 [快速开始](./../guide/start) 中的详细步骤。简要流程：
 
 1. 访问 [GitHub Token 设置页面](https://github.com/settings/tokens)
 2. 生成 Classic Token
@@ -58,7 +58,7 @@ A: 静默模式是一个安全功能，开启后适配器只接收 GitHub 事件
 }
 ```
 
-详见：[配置说明 - 静默模式](/markdown/guide/config#silentmode)
+详见：[配置说明 - 静默模式](./../guide/config#silentmode)
 
 ---
 
@@ -75,7 +75,7 @@ A: 主要区别：
 | 事件支持 | 部分受限  | 完整支持     |
 | 代理支持 | 支持      | 不支持       |
 
-详见：[Pull 模式](/markdown/mode/pull) 和 [Webhook 模式](/markdown/mode/webhook)
+详见：[Pull 模式](./../mode/pull) 和 [Webhook 模式](./../mode/webhook)
 
 ### Q: 如何选择通信模式？
 
@@ -141,7 +141,7 @@ A: 请检查：
 - 代理协议是否正确（http/https）
 - 尝试使用 curl 测试代理
 
-详见：[代理配置](/markdown/mode/proxy)
+详见：[代理配置](./../mode/proxy)
 
 ### Q: Pull 模式频繁出现网络错误？
 
@@ -154,7 +154,27 @@ A: 适配器已优化网络错误处理，临时性错误（如 500/502/503、EH
 3. **增加轮询间隔**：减少请求频率，降低网络压力
 4. **查看日志**：开启 [`loggerinfo`](../guide/config.md#loggerinfo) 查看详细错误信息
 
-详见：[Pull 模式 - 错误处理优化](/markdown/mode/pull#错误处理优化)
+详见：[Pull 模式 - 错误处理优化](./../mode/pull)
+
+### Q: 插件启动时获取用户信息失败怎么办？
+
+A: 适配器内置了自动重试机制，会在启动时自动重试获取 GitHub 用户信息。
+
+重试行为取决于配置：
+
+- **[`autoDispose`](../guide/config.md#autodispose) = true（默认）**：最多重试 [`maxRetries`](../guide/config.md#maxretries) 次（默认 10 次），全部失败后自动关闭插件
+- **[`autoDispose`](../guide/config.md#autodispose) = false**：永远重试，延迟最大叠加到 1 分钟/次，直到成功或手动停止插件
+
+如果遇到此问题，建议：
+
+1. **检查网络连接**：确保能够访问 GitHub API
+2. **检查 Token**：确认 Token 有效且具有必要权限
+3. **配置代理**：如果访问 GitHub 不稳定，可以配置代理（仅 Pull 模式）
+4. **调整重试设置**：
+   - 增加 [`maxRetries`](../guide/config.md#maxretries) 值以延长重试时间
+   - 关闭 [`autoDispose`](../guide/config.md#autodispose) 以实现永久重试
+
+详见：[配置说明 - 网络重试设置](./../guide/config#网络重试设置)
 
 ---
 
@@ -169,7 +189,7 @@ const channelId = 'owner/repo:issues:123'
 await bot.sendMessage(channelId, '消息内容')
 ```
 
-详见：[API 接口](/markdown/dev/apis)
+详见：[API 接口](./../dev/apis)
 
 ### Q: 如何监听特定的 GitHub 事件？
 
@@ -181,7 +201,7 @@ ctx.on('github/issue-opened', (data) => {
 })
 ```
 
-详见：[事件系统](/markdown/dev/events) 和 [监听事件示例](/markdown/dev/listen-events)
+详见：[事件系统](./../dev/events)
 
 ### Q: 频道 ID 是什么格式？
 
@@ -193,7 +213,7 @@ A: 频道 ID 格式为：`owner/repo:type:number`
 - PR: `owner/repo:pull:456`
 - Discussion: `owner/repo:discussions:789`
 
-详见：[频道 ID 说明](/markdown/dev/channel-id)
+详见：[频道 ID 说明](./../dev/channel-id)
 
 ---
 
