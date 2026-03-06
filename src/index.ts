@@ -2,6 +2,7 @@ import { Context, Logger } from 'koishi';
 import { GitHubBot } from './bot/bot';
 import { Config } from './config';
 import { registerWebhookRouter } from './webhook-router';
+import { fetchUsernameWithRetry } from './utils';
 
 export const name = 'adapter-github';
 export const reusable = true;
@@ -34,25 +35,34 @@ export const usage = `
 // 插件入口
 export function apply(ctx: Context, config: Config)
 {
-  ctx.on("ready", async () =>
+  // 用于在插件销毁时中断重试等待
+  const abortController = new AbortController();
+
+  ctx.on('dispose', () =>
   {
-    // 先获取 GitHub 用户信息，确定 selfId
-    let username: string;
-    try
+    abortController.abort();
+  });
+
+  ctx.on('ready', async () =>
+  {
+    // 先获取 GitHub 用户信息，确定 selfId（支持重试）
+    const username = await fetchUsernameWithRetry(config, abortController.signal);
+
+    // 获取失败（autoDispose=true 且已达最大重试次数）或插件已销毁
+    if (!username)
     {
-      // 动态导入 Octokit
-      const { Octokit } = await import('@octokit/rest');
-      const octokit = new Octokit({ auth: config.token });
-      const { data: user } = await octokit.users.getAuthenticated();
-      username = user.login;
-      logger.info(`获取到 GitHub 用户名：${username}`);
-    } catch (error)
-    {
-      logger.error('获取 GitHub 用户信息失败:', error);
-      logger.error('插件将自动关闭');
-      ctx.scope.dispose();
+      if (!abortController.signal.aborted)
+      {
+        logger.error('插件将自动关闭');
+        ctx.scope.dispose();
+      }
       return;
     }
+
+    // 检查插件是否已在重试期间被销毁
+    if (abortController.signal.aborted) return;
+
+    logger.info(`获取到 GitHub 用户名：${username}`);
 
     // 创建子上下文，确保 bot 的生命周期与插件绑定
     const botCtx = ctx.guild();
@@ -78,8 +88,8 @@ export function apply(ctx: Context, config: Config)
     // 在子上下文销毁时自动清理
     botCtx.on('dispose', async () =>
     {
-      // 与start一样 koishi会自动调用
-      //  await bot.stop()
+      // 与 start 一样，koishi 会自动调用
+      // await bot.stop()
     });
   });
 }
