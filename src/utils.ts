@@ -1,6 +1,7 @@
 import { sleep } from 'koishi';
 import { Config } from './config';
 import { logger } from './index';
+import { fetchWithProxy } from './bot/http';
 
 /**
  * 计算第 attempt 次失败后的等待时间（毫秒）
@@ -35,7 +36,14 @@ export async function fetchUsernameWithRetry(
     try
     {
       const { Octokit } = await import('@octokit/rest');
-      const octokit = new Octokit({ auth: config.token });
+      // 根据配置决定是否使用代理
+      const proxy = config.useProxy ? config.proxyUrl : undefined;
+      const octokit = new Octokit({
+        auth: config.token,
+        request: {
+          fetch: (url, init) => fetchWithProxy(url, init, proxy)
+        }
+      });
       const { data: user } = await octokit.users.getAuthenticated();
       return user.login;
     } catch (error)

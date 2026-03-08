@@ -53,7 +53,17 @@ export const Config: Schema<Config> = Schema.intersect([
         mode: Schema.const('webhook'),
         webhookPath: Schema.string().role('link').default('/github/webhook').description('Webhook 路径<br>默认地址：`http://127.0.0.1:5140/github/webhook`'),
         webhookSecret: Schema.string().description('Webhook 密钥（可选，用于验证请求）').role('secret'),
+        useProxy: Schema.boolean().default(false).description('是否使用代理（仅作用于发送消息）'),
       }),
+      Schema.union([
+        Schema.object({
+          useProxy: Schema.const(true).required(),
+          proxyUrl: Schema.string().description('代理地址（仅支持 http/https 协议）').default("http://localhost:7897"),
+        }),
+        Schema.object({
+          useProxy: Schema.const(false).description('是否使用代理'),
+        }),
+      ]),
     ]),
     Schema.intersect([
       Schema.object({
@@ -70,7 +80,7 @@ export const Config: Schema<Config> = Schema.intersect([
       }),
       Schema.union([
         Schema.object({
-          useProxy: Schema.const(true).required().description('是否使用代理'),
+          useProxy: Schema.const(true).required(),
           proxyUrl: Schema.string().description('代理地址（仅支持 http/https 协议）').default("http://localhost:7897"),
         }),
         Schema.object({

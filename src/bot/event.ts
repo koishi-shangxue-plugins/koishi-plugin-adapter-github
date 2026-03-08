@@ -137,7 +137,6 @@ export class GitHubBotWithEventHandling extends GitHubBot
         // 使用 updateStatus 方法更新状态并派发 login-updated
         this.updateStatus(Universal.Status.ONLINE);
         const repoList = validRepos.map(r => r.repository).join(', ');
-        this.loggerInfo(`GitHub 机器人已上线：${this.selfId} (监听仓库：${repoList})`);
 
         // 构建通信模式信息
         let modeInfo = 'Pull';
@@ -145,12 +144,20 @@ export class GitHubBotWithEventHandling extends GitHubBot
         {
           modeInfo += ` (代理：${this.config.proxyUrl})`;
         }
+        this.loggerInfo(`GitHub 机器人已上线：${this.selfId} (${modeInfo}, 监听仓库：${repoList})`);
       } else
       {
         // Webhook 模式
         // 使用 updateStatus 方法更新状态并派发 login-updated
         this.updateStatus(Universal.Status.ONLINE);
-        this.loggerInfo(`GitHub 机器人已上线：${this.selfId}`);
+
+        // 构建通信模式信息
+        let modeInfo = 'Webhook';
+        if (this.config.useProxy && this.config.proxyUrl)
+        {
+          modeInfo += ` (代理：${this.config.proxyUrl})`;
+        }
+        this.loggerInfo(`GitHub 机器人已上线：${this.selfId} (${modeInfo})`);
       }
 
       // 仅在 Pull 模式下启动定时器
