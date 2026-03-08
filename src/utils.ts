@@ -60,7 +60,11 @@ export async function fetchUsernameWithRetry(
         }
         const delay = getRetryDelay(attempt);
         const delaySec = Math.round(delay / 1000);
-        logger.warn(`获取 GitHub 用户信息失败（第 ${attempt + 1}/${maxRetries} 次），${delaySec} 秒后重试:`, error);
+        // 根据配置决定是否输出网络重试警告
+        if (!config.ignoreNetworkWarnings)
+        {
+          logger.warn(`获取 GitHub 用户信息失败（第 ${attempt + 1}/${maxRetries} 次），${delaySec} 秒后重试:`, error);
+        }
         await sleep(delay);
         if (signal.aborted) return null;
       } else
@@ -68,7 +72,11 @@ export async function fetchUsernameWithRetry(
         // 永久重试模式：不限次数，延迟最大叠加到 60 秒
         const delay = getRetryDelay(attempt);
         const delaySec = Math.round(delay / 1000);
-        logger.warn(`获取 GitHub 用户信息失败（第 ${attempt + 1} 次），${delaySec} 秒后重试:`, error);
+        // 根据配置决定是否输出网络重试警告
+        if (!config.ignoreNetworkWarnings)
+        {
+          logger.warn(`获取 GitHub 用户信息失败（第 ${attempt + 1} 次），${delaySec} 秒后重试:`, error);
+        }
         await sleep(delay);
         if (signal.aborted) return null;
         // 延迟达到上限后保持 60 秒间隔，不再递增 attempt

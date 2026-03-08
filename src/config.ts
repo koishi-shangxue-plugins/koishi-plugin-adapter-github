@@ -32,6 +32,7 @@ export interface Config
   silentMode?: boolean;
   autoDispose?: boolean;   // 是否在特殊情况下自动关闭插件
   maxRetries?: number;     // 最大重试次数
+  ignoreNetworkWarnings?: boolean; // 是否忽略网络重试警告日志
 }
 
 // 定义配置项 Schema
@@ -97,6 +98,7 @@ export const Config: Schema<Config> = Schema.intersect([
 
   Schema.object({
     silentMode: Schema.boolean().default(false).description('是否以静默模式运行？<br>开启后，不会向 GitHub 发送任何可见内容，包括 send、sendMessage 等方法都不再可用，仅单向接收 GitHub 消息、响应必要的 webhook ping 事件。'),
+    ignoreNetworkWarnings: Schema.boolean().default(true).description('是否忽略网络重试警告日志<br>开启后，网络临时故障（如超时、连接重置等）的重试日志将不会显示，只保留严重错误日志'),
   }).description('静默模式'),
 
   Schema.object({
