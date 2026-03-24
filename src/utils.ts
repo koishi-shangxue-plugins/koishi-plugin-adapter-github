@@ -14,8 +14,7 @@ export async function fetchUsernameWithRetry(
   signal: AbortSignal
 ): Promise<string | null>
 {
-  const autoDispose = config.autoDispose ?? true;
-  const maxRetries = config.maxRetries ?? 10;
+  const maxRetries = Math.max(config.maxRetries ?? 10, 1);
   let attempt = 0;
 
   while (true)
@@ -54,35 +53,24 @@ export async function fetchUsernameWithRetry(
         return null;
       }
 
-      if (autoDispose)
-      {
-        if (attempt >= maxRetries)
-        {
-          logger.error(`获取 GitHub 用户信息失败，已重试 ${maxRetries} 次，放弃：${detail}`);
-          return null;
-        }
+      const currentAttempt = attempt + 1;
+      const effectiveAttempt = Math.min(attempt, maxRetries - 1);
+      const delay = getRetryDelay(effectiveAttempt);
+      const delaySec = Math.round(delay / 1000);
 
-        const delay = getRetryDelay(attempt);
-        const delaySec = Math.round(delay / 1000);
-        if (!config.ignoreNetworkWarnings)
-        {
-          logger.warn(`获取 GitHub 用户信息失败（第 ${attempt + 1}/${maxRetries} 次），${delaySec} 秒后重试：${detail}`);
-        }
-        await sleep(delay);
-      } else
+      if (!config.ignoreNetworkWarnings)
       {
-        const delay = getRetryDelay(attempt);
-        const delaySec = Math.round(delay / 1000);
-        if (!config.ignoreNetworkWarnings)
+        if (currentAttempt <= maxRetries)
         {
-          logger.warn(`获取 GitHub 用户信息失败（第 ${attempt + 1} 次），${delaySec} 秒后重试：${detail}`);
+          logger.warn(`获取 GitHub 用户信息失败（第 ${currentAttempt}/${maxRetries} 次），${delaySec} 秒后重试：${detail}`);
+        } else
+        {
+          logger.warn(`获取 GitHub 用户信息失败（已超过 ${maxRetries} 次），${delaySec} 秒后继续重试：${detail}`);
         }
-        await sleep(delay);
-        if (delay < 60 * 1000) attempt++;
-        continue;
       }
 
-      attempt++;
+      await sleep(delay);
+      if (attempt < maxRetries - 1) attempt++;
     } finally
     {
       requestClient.dispose();

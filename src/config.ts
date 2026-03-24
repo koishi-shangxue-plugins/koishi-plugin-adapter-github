@@ -30,7 +30,6 @@ export interface Config
   proxyUrl?: string;
   loggerinfo?: boolean;
   silentMode?: boolean;
-  autoDispose?: boolean;   // 是否在特殊情况下自动关闭插件
   maxRetries?: number;     // 最大重试次数
   ignoreNetworkWarnings?: boolean; // 是否忽略网络重试警告日志
 }
@@ -92,8 +91,7 @@ export const Config: Schema<Config> = Schema.intersect([
   ]).description('模式配置'),
 
   Schema.object({
-    autoDispose: Schema.boolean().default(true).description('遇到错误时是否按最大重试次数重试后关闭插件<br>开启：重试达到最大次数后关闭插件<br>关闭：永远重试，不会关闭插件（延迟最大叠加到 1 分钟/次）'),
-    maxRetries: Schema.number().default(10).description('最大重试次数（仅在开启自动关闭时生效）<br>每次间隔递增 5 秒，最后一次约 1 分钟'),
+    maxRetries: Schema.number().default(10).description('重试升级次数上限<br>达到该次数后会保持最大延迟继续重试，不会自动关闭插件'),
   }).description('网络重试设置'),
 
   Schema.object({

@@ -45,10 +45,10 @@ export function apply(ctx: Context, config: Config)
 
   ctx.on('ready', async () =>
   {
-    // 先获取 GitHub 用户信息，确定 selfId（支持重试）
+    // 先获取 GitHub 用户信息，确定 selfId（网络错误会持续重试）
     const username = await fetchUsernameWithRetry(config, abortController.signal);
 
-    // 获取失败（autoDispose=true 且已达最大重试次数）或插件已销毁
+    // 获取失败仅表示遇到了不可重试错误，或插件已销毁
     if (!username)
     {
       if (!abortController.signal.aborted)
