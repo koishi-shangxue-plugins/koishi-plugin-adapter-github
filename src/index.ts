@@ -62,7 +62,7 @@ export function apply(ctx: Context, config: Config)
     // 检查插件是否已在重试期间被销毁
     if (abortController.signal.aborted) return;
 
-    logger.info(`获取到 GitHub 用户名：${username}`);
+    // logger.info(`获取到 GitHub 用户名：${username}`);
 
     // 创建子上下文，确保 bot 的生命周期与插件绑定
     const botCtx = ctx.guild();
@@ -77,7 +77,7 @@ export function apply(ctx: Context, config: Config)
       selfId: bot.selfId,
     });
     bot.dispatch(loginAddedSession);
-    logger.info(`派发 login-added 事件: ${bot.selfId}`);
+    // logger.info(`派发 login-added 事件: ${bot.selfId}`);
 
     // 如果是 webhook 模式，注册路由
     if (config.mode === 'webhook')
