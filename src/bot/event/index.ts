@@ -26,7 +26,10 @@ export class GitHubBotWithEventHandling extends GitHubBot
       await this.ensureOctokitReady();
 
       const { data: user } = await this.octokit.users.getAuthenticated();
-      this.user.avatar = user.avatar_url;
+      if (this.user)
+      {
+        this.user.avatar = user.avatar_url;
+      }
 
       if (this.config.mode === 'pull')
       {

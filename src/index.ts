@@ -17,6 +17,7 @@ export const logger = new Logger('github');
 
 // 导出配置项
 export * from './config';
+export * from './bot/event/event_types';
 
 export const usage = `
 ---
